@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TravelPro — 여행 플래너 (상업형 UI)</title>
+  <title>Travel Like a PRO! — 여행 플래너</title>
 
   <!-- React UMD + Babel (in-browser JSX) -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -13,7 +13,7 @@
   <style>
     /* --- Theme & base --- */
     :root{
-      --bg: #f3f6fb;
+      --bg: #faf9f6;
       --card: #ffffff;
       --muted: #6b7280;
       --text: #0f172a;
@@ -25,7 +25,7 @@
       font-family: Inter, 'Noto Sans KR', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
     }
     .dark {
-      --bg:#071428; --card:#0b1622; --muted:#9aa4b2; --text:#e6eef8; --glass: rgba(255,255,255,0.03);
+      --bg:#0c0c0c; --card:#0b1622; --muted:#9aa4b2; --text:#e6eef8; --glass: rgba(255,255,255,0.03);
     }
 
     *{box-sizing:border-box}
@@ -202,7 +202,7 @@
                 ['tp_dates_v2','tp_flights_v2','tp_places_v2','tp_dests_v2','tp_points_v2','tp_courses_v2','tp_theme_v2'].forEach(k=>localStorage.removeItem(k));
                 // refresh UI state
                 setFlights(sampleFlights()); setPlaces(samplePlaces()); setDests(sampleDests()); setPoints([]); setCourses({}); setDates({from:'', to:'', saved:false}); setTheme({mode:'light', accent:'#1366ff'});
-                alert('로컬 데이터가 초기화 되었습니다. 페이지를 새로고침하세요.');
+                alert('기록한 데이터가 모두 초기화 되었습니다. 페이지를 새로고침하세요.');
               }} />}
               {routeBase === 'detail' && <DetailRouter route={route} dates={dates} flights={flights} places={places} dests={dests} points={points} />}
             </div>
@@ -240,7 +240,7 @@
       <div className="hero card" style={{alignItems:'flex-start'}}>
         <div style={{flex:1}}>
           <h1>당신의 다음 여행, 지금 설계하세요</h1>
-          <p className="muted">직관적인 플로우로 항공/숙박/코스까지 한 번에 관리 — 비즈니스·레저 모두에 적합합니다.</p>
+          <p className="muted">직관적인 플로우로 항공/숙박/코스까지 한 번에 관리.</p>
 
           <div style={{marginTop:18}} className="row">
             <button className="btn primary" onClick={()=>onNavigate('list')}>여행 시작하기</button>
@@ -253,9 +253,6 @@
 
         <div style={{width:320}}>
           <div className="card-hero">
-            <div style={{fontWeight:800}}>특별 혜택</div>
-            <div className="muted" style={{marginTop:6}}>선택한 날짜에 맞춘 추천 항공/호텔 할인 정보를 곧 제공합니다.</div>
-            <small className="note">(샘플 UI — 실제 제휴 연동은 API 필요)</small>
           </div>
         </div>
       </div>
@@ -294,16 +291,16 @@
       setLocal(d=>({...d, [f]:v}));
     }
     function save(){
-      if(!local.from || !local.to){ alert('출발/도착일을 모두 입력하세요.'); return; }
+      if(!local.from || !local.to){ alert('출발/도착일을 입력하세요.'); return; }
       const saved = {...local, saved:true};
       updateDates(saved);
-      alert('날짜가 저장되었습니다. 모든 페이지에 반영됩니다.');
+      alert('여행 날짜가 저장되었습니다. 모든 페이지에 반영됩니다.');
     }
 
     return (
       <div>
-        <h2>대표 페이지</h2>
-        <div className="muted" style={{marginTop:6}}>안녕하세요</div>
+        <h2>여행 시작하기.</h2>
+        <div className="muted" style={{marginTop:6}}>Enjoy YOUR journey</div>
 
         <div style={{marginTop:12}} className="grid-2">
           <div className="card">
@@ -323,12 +320,6 @@
               <button className="btn ghost" onClick={save} disabled={local.saved}>날짜 저장</button>
             </div>
             {local.saved ? <div style={{marginTop:10}} className="date-banner"><div className="date-text">{formatRange(local.from, local.to)}</div><div className="muted">수정 불가 (설정에서 초기화)</div></div> : null}
-          </div>
-
-          <div className="card">
-            <div style={{fontWeight:800}}>빠른 안내</div>
-            <div className="muted" style={{marginTop:8}}>대표 페이지에서 날짜를 저장하면 앱 전체에 동일하게 반영됩니다. 출장·단체 여행에 유용합니다.</div>
-            <small className="note">원하시면 제휴형 예약 연동(외부 API) 안내도 드립니다.</small>
           </div>
         </div>
       </div>
@@ -484,14 +475,13 @@
               <button className="btn primary" onClick={add}>숙소 추가</button>
               <button className="btn ghost" onClick={previewMap}>지도 미리보기</button>
             </div>
-            <small className="note">참고: 정확한 좌표(위도/경도)는 Google Places/Geocoding API 연동이 필요합니다.</small>
           </div>
         </div>
 
         <div style={{marginTop:12}} className="card">
           <h3 className="small">구글맵 미리보기</h3>
           <div className="map-wrap" style={{marginTop:8}}>
-            {preview ? <iframe className="map-iframe" title="hotel-preview" src={`https://www.google.com/maps?q=${encodeURIComponent(preview)}&output=embed`} /> : <div style={{padding:12}} className="muted">미리보기를 위해 호텔명 또는 장소를 입력하고 '지도 미리보기'를 눌러보세요.</div>}
+            {preview ? <iframe className="map-iframe" title="hotel-preview" src={`https://www.google.com/maps?q=${encodeURIComponent(preview)}&output=embed`} /> : <div style={{padding:12}} className="muted">장소를 입력하면 구글맵이 뜹니다.</div>}
           </div>
         </div>
 
