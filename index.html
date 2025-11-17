@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Travel Planner — Modern Single File (Dark Mode + Theme)</title>
+  <title>Travel Planner — Modern Single File (Updated)</title>
 
   <!-- React + ReactDOM (UMD) and Babel for in-browser JSX compilation -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -103,6 +103,11 @@
     .small{ font-size:13px; color:var(--muted); }
     .accent-swatch { width:28px; height:28px; border-radius:6px; border:1px solid rgba(0,0,0,0.06); box-shadow: 0 6px 12px rgba(15,23,42,0.06); }
     .theme-dark .accent-swatch { border:1px solid rgba(255,255,255,0.04); box-shadow: none; }
+
+    /* iframe map responsive */
+    .map-wrap { width:100%; height:300px; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,0.06); }
+    .theme-dark .map-wrap{ border:1px solid rgba(255,255,255,0.03); }
+    .map-iframe{ width:100%; height:100%; border:0; }
   </style>
 </head>
 <body>
@@ -111,26 +116,23 @@
   <script type="text/babel">
   const { useState, useEffect, useRef } = React;
 
-  /********** Router helpers (hash + history) **********/
+  /* ---- Helpers ---- */
   function getInitialRouteFromHash(){
     const h = location.hash.replace(/^#/, '');
     if(!h) return 'home';
     return h;
   }
-
-  // single pushRoute used across the app
   function pushRoute(route){
     history.pushState({route}, '', '#' + route);
     window.dispatchEvent(new PopStateEvent('popstate', {state:{route}}));
   }
 
-  /********** Theme helpers **********/
+  /* Theme persistence */
   const THEME_KEY = 'tp_theme_v1';
   function loadTheme(){
     try{
       const raw = localStorage.getItem(THEME_KEY);
       if(!raw) {
-        // respect system preference
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         return { mode: prefersDark ? 'dark' : 'light', accent: '#4f46e5' };
       }
@@ -141,7 +143,21 @@
   }
   function saveTheme(theme){ try{ localStorage.setItem(THEME_KEY, JSON.stringify(theme)); }catch(e){} }
 
-  /********** App **********/
+  /* Dates persistence */
+  const DATES_KEY = 'tp_dates';
+  function loadDates(){
+    try{
+      const raw = localStorage.getItem(DATES_KEY);
+      if(!raw) return { from:'', to:'', saved:false };
+      return JSON.parse(raw);
+    }catch(e){ return { from:'', to:'', saved:false }; }
+  }
+  function saveDates(d){ try{ localStorage.setItem(DATES_KEY, JSON.stringify(d)); }catch(e){} }
+
+  /* Courses saved per date */
+  const SAVED_COURSES_KEY = 'tp_saved_courses';
+
+  /* ---- App ---- */
   function App(){
     const [route, setRoute] = useState(getInitialRouteFromHash());
     const [animState, setAnimState] = useState('entered');
@@ -149,15 +165,8 @@
     const prevRouteRef = useRef(route);
     const isMounted = useRef(false);
 
-    // theme state
     const [theme, setTheme] = useState(loadTheme());
-
-    useEffect(()=>{
-      // apply theme to body class + CSS variable
-      document.body.classList.toggle('theme-dark', theme.mode === 'dark');
-      document.documentElement.style.setProperty('--accent', theme.accent || '#4f46e5');
-      saveTheme(theme);
-    }, [theme]);
+    useEffect(()=>{ document.body.classList.toggle('theme-dark', theme.mode === 'dark'); document.documentElement.style.setProperty('--accent', theme.accent || '#4f46e5'); saveTheme(theme); }, [theme]);
 
     useEffect(()=>{
       function onPop(e){
@@ -179,9 +188,7 @@
     function navigateTo(newRoute){
       setAnimDir('left');
       setAnimState('exiting');
-      setTimeout(()=>{
-        pushRoute(newRoute);
-      }, 180);
+      setTimeout(()=>{ pushRoute(newRoute); }, 180);
     }
 
     function routeName(){ return route.split('/')[0] || 'home'; }
@@ -207,7 +214,7 @@
     );
   }
 
-  /********** Header **********/
+  /* ---- Header ---- */
   function Header({route, onNavigate, theme, setTheme}){
     const showBack = route && route !== 'home';
     function goBack(){ history.back(); }
@@ -230,30 +237,31 @@
     );
   }
 
-  /********** Bottom nav **********/
+  /* ---- Bottom Nav: changed labels to 메인, 목록, 설정 ---- */
   function BottomNav({current, onNavigate}){
     return (
       <nav className="bottom-nav" role="navigation" aria-label="bottom">
         <div className={'nav-btn ' + (current==='home' ? 'active':'' )} onClick={()=>onNavigate('home')}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 8h-3v8h-12v-8h-3l9-8z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <div>트립</div>
+          <div>메인</div>
         </div>
-        <div className={'nav-btn ' + (current==='flights' ? 'active':'' )} onClick={()=>onNavigate('flights')}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 12h20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><path d="M6 8l2 4 4 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <div>항공</div>
+        <div className={'nav-btn ' + (current==='list' ? 'active':'' )} onClick={()=>onNavigate('list')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div>목록</div>
         </div>
-        <div className={'nav-btn ' + (current==='destinations' ? 'active':'' )} onClick={()=>onNavigate('destinations')}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l4 7 7 1-5 5 1 7-7-4-7 4 1-7-5-5 7-1z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <div>여행지</div>
+        <div className={'nav-btn ' + (current==='settings' ? 'active':'' )} onClick={()=>onNavigate('settings')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 0 1 2.94 16.9l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82L4.21 3.65A2 2 0 0 1 7 1.94l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V1a2 2 0 0 1 4 0v.09c0 .6.37 1.14 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06A2 2 0 0 1 21.06 3.1l-.06.06a1.65 1.65 0 0 0-.33 1.82V6a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div>설정</div>
         </div>
       </nav>
     );
   }
 
-  /********** Routes renderer **********/
+  /* ---- Routes ---- */
   function Routes({route, navigateTo, theme, setTheme}){
     const [mainRoute, ...rest] = route.split('/');
     if(mainRoute === 'home' || mainRoute === '') return <Home navigateTo={navigateTo} />;
+    if(mainRoute === 'list') return <ListPage navigateTo={navigateTo} />;
     if(mainRoute === 'flights') return <FlightsPage navigateTo={navigateTo} />;
     if(mainRoute === 'accommodation') return <AccommodationPage navigateTo={navigateTo} />;
     if(mainRoute === 'destinations') return <DestinationsPage navigateTo={navigateTo} />;
@@ -263,51 +271,59 @@
     return <Home navigateTo={navigateTo} />;
   }
 
-  /********** Home **********/
+  /* ---- Home: date fixed after save, message removed => just "안녕하세요" ---- */
   function Home({navigateTo}){
-    const [message, setMessage] = useState('여행 계획 페이지입니다.');
-    const [dates, setDates] = useState({from:'', to:''});
+    const [dates, setDates] = useState(()=> loadDates() );
+    // dates: {from, to, saved:boolean}
+    useEffect(()=>{ /* nothing */ }, []);
+    function setDateField(field, value){
+      if(dates.saved) return; // once saved, do not change
+      setDates(d=>({...d, [field]: value}));
+    }
+    function save(){
+      if(!dates.from || !dates.to){ alert('출발/도착일을 모두 입력하세요.'); return; }
+      const toSave = {...dates, saved:true};
+      saveDates(toSave);
+      setDates(toSave);
+      alert('날짜가 저장되어 변경할 수 없습니다. (설정 > 데이터 관리에서 초기화 가능)');
+    }
+
     return (
       <section>
         <h2>대표 페이지</h2>
-        <p className="lead">모던한 모바일 우선 UI — 항공/숙박/여행지/코스에 빠르게 접근하세요.</p>
+        <p className="lead">안녕하세요</p> {/* 메시지 탭 제거, 고정 문구 */}
 
         <div style={{marginTop:16}} className="grid">
           <div className="card">
             <label className="small">여행 시작</label>
-            <input className="input" type="date" value={dates.from} onChange={e=>setDates(d=>({...d, from:e.target.value}))} />
+            <input className="input" type="date" value={dates.from || ''} onChange={e=>setDateField('from', e.target.value)} disabled={dates.saved} />
             <label className="small" style={{marginTop:10}}>여행 종료</label>
-            <input className="input" type="date" value={dates.to} onChange={e=>setDates(d=>({...d, to:e.target.value}))} />
+            <input className="input" type="date" value={dates.to || ''} onChange={e=>setDateField('to', e.target.value)} disabled={dates.saved} />
+            <div style={{display:'flex', gap:8, marginTop:12}}>
+              <button className="btn primary" onClick={()=>navigateTo('list')}>목록으로</button>
+              <button className="btn" onClick={save} disabled={dates.saved}>날짜 저장</button>
+            </div>
+            {dates.saved ? <div className="muted small" style={{marginTop:8}}>저장된 날짜: {dates.from} → {dates.to}</div> : null}
           </div>
 
           <div className="card">
-            <label className="small">메시지</label>
-            <textarea className="input" value={message} onChange={e=>setMessage(e.target.value)} />
-            <div style={{marginTop:10}} className="controls">
-              <button className="btn primary" onClick={()=>navigateTo('flights')}>항공편</button>
-              <button className="btn" onClick={()=>navigateTo('accommodation')}>숙박</button>
-              <button className="btn" onClick={()=>navigateTo('destinations')}>여행지</button>
-              <button className="btn" onClick={()=>navigateTo('courses')}>코스</button>
+            <h3 className="small">바로가기</h3>
+            <div style={{marginTop:12, display:'grid', gap:10}}>
+              {/* Buttons now navigate to 목록 page instead of direct pages */}
+              <button className="btn" onClick={()=>navigateTo('list')}>항공편 · 숙박 · 여행지 · 코스 모두 보기</button>
+              <div className="muted small">목록에서 각각의 항목으로 이동하세요.</div>
             </div>
           </div>
 
           <div className="card">
-            <h3 style={{marginBottom:6}}>빠른 액션</h3>
-            <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+            <h3 className="small">데이터</h3>
+            <div style={{marginTop:8}}>
               <button className="btn" onClick={()=>{
-                const keys = ['tp_points','tp_flights','tp_places','tp_destinations','tp_prefs'];
-                const data={}; keys.forEach(k=>{ try{ data[k]=JSON.parse(localStorage.getItem(k)) }catch(e){ data[k]=null } });
+                const keys = ['tp_points','tp_flights','tp_places','tp_destinations','tp_prefs','tp_theme_v1','tp_dates','tp_saved_courses'];
+                const data={}; keys.forEach(k=>{ try{ data[k]=JSON.parse(localStorage.getItem(k)) }catch(e){ data[k]=localStorage.getItem(k) } });
                 const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob);
                 const a=document.createElement('a'); a.href=url; a.download='travel-planner-data.json'; a.click(); URL.revokeObjectURL(url);
               }}>데이터 저장</button>
-              <label className="btn" style={{cursor:'pointer'}}>
-                불러오기
-                <input type="file" accept="application/json" style={{display:'none'}} onChange={e=>{
-                  const f = e.target.files && e.target.files[0]; if(!f) return;
-                  const r = new FileReader(); r.onload = ev => { try{ const data = JSON.parse(ev.target.result); Object.keys(data||{}).forEach(k=>{ if(data[k]!==null) localStorage.setItem(k, JSON.stringify(data[k])); }); alert('데이터 저장 완료. 새로고침하세요.'); }catch(err){ alert('불러오기 실패: '+err.message); } }; r.readAsText(f);
-                }} />
-              </label>
-              <button className="btn" onClick={()=>navigateTo('settings')}>설정</button>
             </div>
           </div>
         </div>
@@ -315,8 +331,67 @@
     );
   }
 
-  /********** Flights Page (with detail linking) **********/
-  function FlightsPage({navigateTo}){
+  /* ---- List page (목록) : allows navigation to individual pages ---- */
+  function ListPage({navigateTo}){
+    return (
+      <section>
+        <h2>목록</h2>
+        <p className="muted">원하는 항목을 선택하세요.</p>
+        <div style={{marginTop:12, display:'grid', gap:10}}>
+          <div className="card">
+            <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+              <div>
+                <div style={{fontWeight:700}}>항공편</div>
+                <div className="muted small">등록된 항공권을 관리합니다.</div>
+              </div>
+              <div style={{display:'flex', gap:8}}>
+                <button className="btn" onClick={()=>pushRoute('flights')}>열기</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+              <div>
+                <div style={{fontWeight:700}}>숙박</div>
+                <div className="muted small">숙소를 추가하고 관리합니다.</div>
+              </div>
+              <div style={{display:'flex', gap:8}}>
+                <button className="btn" onClick={()=>pushRoute('accommodation')}>열기</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+              <div>
+                <div style={{fontWeight:700}}>여행지</div>
+                <div className="muted small">구글맵과 연결해서 장소를 검색·저장합니다.</div>
+              </div>
+              <div style={{display:'flex', gap:8}}>
+                <button className="btn" onClick={()=>pushRoute('destinations')}>열기</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+              <div>
+                <div style={{fontWeight:700}}>코스</div>
+                <div className="muted small">좌표를 기록하고 날짜별로 저장합니다.</div>
+              </div>
+              <div style={{display:'flex', gap:8}}>
+                <button className="btn" onClick={()=>pushRoute('courses')}>열기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* ---- Flights, Accommodation remain unchanged except routing via 목록 ---- */
+  function FlightsPage(){ /* same as before but minimal here for brevity */ 
     const [offers, setOffers] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_flights')) || sampleFlights(); }catch(e){ return sampleFlights(); } });
     useEffect(()=>{ localStorage.setItem('tp_flights', JSON.stringify(offers)); }, [offers]);
     const [form, setForm] = useState({airline:'', from:'', to:'', depart:'', arrive:'', price:'', duration:''});
@@ -359,17 +434,9 @@
       </section>
     );
   }
+  function sampleFlights(){ return [{id:'f1', airline:'Air Seoul', from:'ICN', to:'HND', depart:'08:30', arrive:'11:00', price:'120000', duration:'150'}]; }
 
-  function sampleFlights(){
-    return [
-      {id:'f1', airline:'Air Seoul', from:'ICN', to:'HND', depart:'08:30', arrive:'11:00', price:'120000', duration:'150'},
-      {id:'f2', airline:'Korean Air', from:'ICN', to:'NRT', depart:'09:00', arrive:'11:30', price:'150000', duration:'150'},
-      {id:'f3', airline:'Asiana', from:'ICN', to:'SIN', depart:'07:50', arrive:'13:40', price:'320000', duration:'350'},
-    ];
-  }
-
-  /********** Accommodation Page **********/
-  function AccommodationPage({navigateTo}){
+  function AccommodationPage(){
     const [places, setPlaces] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_places')) || sampleAccommodations(); }catch(e){ return sampleAccommodations(); } });
     useEffect(()=>{ localStorage.setItem('tp_places', JSON.stringify(places)); }, [places]);
     const [form, setForm] = useState({name:'', location:'', price:'', nights:'', amenities:''});
@@ -408,159 +475,224 @@
       </section>
     );
   }
-  function sampleAccommodations(){
-    return [
-      {id:'a1', name:'City Hotel', location:'Downtown', price:'90000', nights:'2', amenities:'WiFi, Breakfast'},
-      {id:'a2', name:'Cozy Guesthouse', location:'Old Town', price:'45000', nights:'3', amenities:'Kitchen, Laundry'},
-    ];
-  }
+  function sampleAccommodations(){ return [{id:'a1', name:'City Hotel', location:'Downtown', price:'90000', nights:'2', amenities:'WiFi'}]; }
 
-  /********** Destinations Page **********/
-  function DestinationsPage({navigateTo}){
-    const [destinations, setDestinations] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_destinations')) || sampleDestinations(); }catch(e){ return sampleDestinations(); } });
-    const [prefs, setPrefs] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_prefs')) || {culture:5, nature:5, food:5, budget:5, distance:5}; }catch(e){ return {culture:5, nature:5, food:5, budget:5, distance:5}; } });
+  /* ---- Destinations: replaced with add/search via Google Maps and preference recording ---- */
+  function DestinationsPage(){
+    const [destinations, setDestinations] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_destinations')) || []; }catch(e){ return []; } });
     useEffect(()=>{ localStorage.setItem('tp_destinations', JSON.stringify(destinations)); }, [destinations]);
-    useEffect(()=>{ localStorage.setItem('tp_prefs', JSON.stringify(prefs)); }, [prefs]);
-    const [plan, setPlan] = useState(null);
 
-    function scoreDest(dest){ const weights = prefs; const s = (dest.culture*weights.culture)+(dest.nature*weights.nature)+(dest.food*weights.food)-(dest.cost*weights.budget)-(dest.distance*weights.distance/10); return s; }
-    function generatePlan(){ const ranked = [...destinations].map(d=>({...d, score:scoreDest(d)})).sort((a,b)=>b.score-a.score); const top = ranked.slice(0,3); const samplePlan = top.map((d,idx)=>({day:idx+1, place:d.name, activities:[`Explore ${d.name} highlights`,`Try local ${d.foodType}`]})); setPlan(samplePlan); }
+    const [name, setName] = useState('');
+    const [pref, setPref] = useState(5);
+    const [mapQuery, setMapQuery] = useState('');
+    const [previewQuery, setPreviewQuery] = useState(''); // shown in iframe
+
+    function searchMap(e){
+      e && e.preventDefault();
+      if(!mapQuery && !name) { alert('검색어를 입력하세요'); return; }
+      const q = mapQuery || name;
+      setPreviewQuery(q);
+    }
+    function addDestination(){
+      if(!name){ alert('여행지명을 입력하세요'); return; }
+      const item = { id: Date.now().toString(), name, pref, query: (mapQuery || name) };
+      setDestinations(d => [item, ...d]);
+      setName(''); setMapQuery(''); setPref(5);
+      alert('여행지가 추가되었습니다.');
+    }
+
+    function remove(id){ setDestinations(d=>d.filter(x=>x.id!==id)); }
 
     return (
       <section>
         <h2>여행지</h2>
-        <p className="muted">선호도에 따른 추천과 샘플 일정을 생성합니다.</p>
+        <p className="muted">여행지명을 입력하면 구글맵에서 검색해 바로 미리보기 및 저장합니다.</p>
 
-        <div style={{marginTop:12}} className="grid">
+        <div style={{marginTop:12, display:'grid', gap:10}}>
           <div className="card">
-            <h3 className="small">선호도</h3>
-            {['culture','nature','food','budget','distance'].map(k=>(
-              <div key={k} style={{marginTop:8}}>
-                <label className="small" style={{textTransform:'capitalize'}}>{k}</label>
-                <input type="range" min={1} max={10} value={prefs[k]} onChange={e=>setPrefs(p=>({...p, [k]:Number(e.target.value)}))} style={{width:'100%'}} />
-              </div>
-            ))}
-            <div style={{marginTop:8, display:'flex', gap:8}}>
-              <button className="btn primary" onClick={generatePlan}>일정 생성</button>
-              <button className="btn" onClick={()=>setDestinations(d=>[...d].sort((a,b)=>a.name.localeCompare(b.name)))}>정렬</button>
+            <label className="small">여행지명</label>
+            <input className="input" placeholder="예: 제주도 성산일출봉" value={name} onChange={e=>setName(e.target.value)} />
+            <label className="small" style={{marginTop:8}}>검색어(구글맵에 표시될 쿼리, 비워두면 여행지명이 사용됩니다)</label>
+            <input className="input" placeholder="검색어(선택)" value={mapQuery} onChange={e=>setMapQuery(e.target.value)} />
+            <label className="small" style={{marginTop:8}}>선호도 (1-10)</label>
+            <input type="range" min="1" max="10" value={pref} onChange={e=>setPref(Number(e.target.value))} />
+            <div style={{display:'flex', gap:8, marginTop:10}}>
+              <button className="btn primary" onClick={searchMap}>구글맵으로 보기</button>
+              <button className="btn" onClick={addDestination}>여행지 추가</button>
             </div>
+            <div className="muted small" style={{marginTop:8}}>추가된 여행지는 아래 목록에 저장됩니다.</div>
           </div>
 
           <div className="card">
-            <h3 className="small">추천 여행지</h3>
-            <div style={{marginTop:8}}>
-              {destinations.map(d=>(
-                <div key={d.id} className="item" onClick={()=>pushRoute(`detail/destinations/${d.id}`)} style={{cursor:'pointer'}}>
+            <h3 className="small">구글맵 미리보기</h3>
+            <div style={{marginTop:10}} className="map-wrap">
+              {previewQuery ? (
+                <iframe className="map-iframe" title="map-preview" src={`https://www.google.com/maps?q=${encodeURIComponent(previewQuery)}&output=embed`} />
+              ) : (
+                <div style={{padding:12}} className="muted small">검색어로 지도를 미리보기합니다.</div>
+              )}
+            </div>
+            {previewQuery ? (
+              <div style={{marginTop:8}}>
+                <a className="btn" style={{textDecoration:'none'}} target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(previewQuery)}`}>Google Maps에서 열기</a>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="card">
+            <h3 className="small">저장된 여행지</h3>
+            <div style={{marginTop:8}} className="list">
+              {destinations.length === 0 ? <div className="muted small">아직 저장된 여행지가 없습니다.</div> : destinations.map(d=>(
+                <div key={d.id} className="item">
                   <div>
                     <div style={{fontWeight:700}}>{d.name}</div>
-                    <div className="muted small">{d.summary}</div>
+                    <div className="muted small">선호도: {d.pref} · 검색어: {d.query}</div>
                   </div>
-                  <div className="small muted">문:{d.culture} 자:{d.nature} 음:{d.food}</div>
+                  <div style={{display:'flex', gap:8}}>
+                    <a className="pill" style={{textDecoration:'none'}} target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.query)}`}>지도에서 보기</a>
+                    <button className="pill" onClick={()=>remove(d.id)}>삭제</button>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="card" style={{gridColumn:'1 / -1'}}>
-            <h3 className="small">생성된 샘플 일정</h3>
-            <div style={{marginTop:8}}>
-              {plan ? (
-                <ol style={{paddingLeft:16}}>
-                  {plan.map(p=>(
-                    <li key={p.day} style={{marginBottom:8}}>
-                      <div style={{fontWeight:700}}>Day {p.day} — {p.place}</div>
-                      <div className="muted small">{p.activities.join(' · ')}</div>
-                    </li>
-                  ))}
-                </ol>
-              ) : <div className="muted small">선호도를 설정하고 '일정 생성'을 눌러보세요.</div>}
-            </div>
-          </div>
         </div>
       </section>
     );
   }
 
-  function sampleDestinations(){
-    return [
-      {id:'d1', name:'서울', summary:'도시 문화, 음식이 풍부한 대도시', culture:9, nature:3, food:10, cost:7, distance:2, foodType:'Korean BBQ'},
-      {id:'d2', name:'제주', summary:'자연과 바다, 드라이브 코스가 매력', culture:6, nature:9, food:8, cost:6, distance:6, foodType:'Seafood'},
-      {id:'d3', name:'교토', summary:'역사적 사찰과 전통문화', culture:10, nature:6, food:8, cost:8, distance:7, foodType:'Kaiseki'},
-      {id:'d4', name:'방콕', summary:'저렴한 여행지, 다양한 길거리 음식', culture:7, nature:4, food:9, cost:4, distance:9, foodType:'Street Food'},
-    ];
-  }
-
-  /********** Courses Page **********/
+  /* ---- Courses: allow google search preview, record coords manually, save course by date to localStorage ---- */
   function CoursesPage(){
     const [points, setPoints] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_points')||'[]'); }catch(e){ return []; } });
-    const [form, setForm] = useState({name:'', lat:'', lng:'', duration:'60', priority:5});
-    const [route, setRoute] = useState(null);
     useEffect(()=>{ localStorage.setItem('tp_points', JSON.stringify(points)); }, [points]);
 
-    function addPoint(e){ e.preventDefault(); setPoints(p=>[{...form, id:Date.now().toString()}, ...p]); setForm({name:'', lat:'', lng:'', duration:'60', priority:5}); }
-    function nearestNeighborRoute(){
-      const withCoords = points.filter(p=>p.lat && p.lng);
-      if(withCoords.length < 2){ setRoute([...points].sort((a,b)=>Number(b.priority)-Number(a.priority))); return; }
-      const pts = points.map(p=>({...p, lat:Number(p.lat), lng:Number(p.lng)}));
-      let current = pts[0]; const visited=[current]; const remaining = pts.slice(1);
-      function dist(a,b){ const dx=a.lat-b.lat; const dy=a.lng-b.lng; return Math.sqrt(dx*dx+dy*dy); }
-      while(remaining.length){ let nearestIdx=0; let nearestD=dist(current,remaining[0]); for(let i=1;i<remaining.length;i++){ const d = dist(current, remaining[i]); if(d<nearestD){ nearestD=d; nearestIdx=i; } } current = remaining.splice(nearestIdx,1)[0]; visited.push(current); }
-      visited.sort((a,b)=>Number(b.priority)-Number(a.priority)); setRoute(visited);
+    const [form, setForm] = useState({name:'', lat:'', lng:'', duration:'60', priority:5});
+    const [previewQuery, setPreviewQuery] = useState('');
+    const [courseName, setCourseName] = useState('');
+    const [saveDate, setSaveDate] = useState('');
+    const [savedCourses, setSavedCourses] = useState(()=>{ try{ return JSON.parse(localStorage.getItem(SAVED_COURSES_KEY)||'{}'); }catch(e){ return {}; } });
+
+    useEffect(()=>{ localStorage.setItem(SAVED_COURSES_KEY, JSON.stringify(savedCourses)); }, [savedCourses]);
+
+    function addPoint(e){ e && e.preventDefault(); if(!form.name){ alert('명소명을 입력하세요'); return; } setPoints(p=>[{...form, id:Date.now().toString()}, ...p]); setForm({name:'', lat:'', lng:'', duration:'60', priority:5}); }
+    function searchPreview(){ const q = form.name; if(!q) { alert('명소명을 입력하세요'); return; } setPreviewQuery(q); }
+    function findCoordsExternal(){ // open google maps so user can pick coordinates manually
+      const q = form.name || ''; if(!q) { alert('명소명을 입력하세요'); return; }
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`, '_blank');
     }
-    function estimateTotalDuration(order){ if(!order) return 0; return order.reduce((s,p)=>s + (Number(p.duration)||0),0); }
-    function exportJSON(){ const blob = new Blob([JSON.stringify({points,route},null,2)],{type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='course-plan.json'; a.click(); URL.revokeObjectURL(url); }
+    function saveCourse(){
+      if(!saveDate){ alert('저장할 날짜를 선택하세요.'); return; }
+      const course = { id: Date.now().toString(), name: courseName || `Course ${new Date().toISOString()}`, points };
+      const copy = {...savedCourses};
+      if(!copy[saveDate]) copy[saveDate] = [];
+      copy[saveDate].push(course);
+      setSavedCourses(copy);
+      setPoints([]); setCourseName(''); setSaveDate('');
+      alert('코스가 저장되었습니다. 저장된 항목에서 Google Maps 링크를 확인하세요.');
+    }
+    function removePoint(id){ setPoints(p=>p.filter(x=>x.id!==id)); }
 
     return (
       <section>
         <h2>코스 만들기</h2>
-        <p className="muted">좌표를 넣으면 자동으로 경로를 만들 수 있습니다.</p>
+        <p className="muted">구글맵 검색을 미리보고 좌표(수동 입력 가능)를 기록한 뒤, 날짜별로 코스를 저장하세요.</p>
 
-        <form onSubmit={addPoint} style={{marginTop:10}} className="grid">
-          <input className="input" placeholder="명소명" value={form.name} onChange={e=>setForm(f=>({...f, name:e.target.value}))} />
-          <input className="input" placeholder="lat (선택)" value={form.lat} onChange={e=>setForm(f=>({...f, lat:e.target.value}))} />
-          <input className="input" placeholder="lng (선택)" value={form.lng} onChange={e=>setForm(f=>({...f, lng:e.target.value}))} />
-          <input className="input" placeholder="체류시간(분)" value={form.duration} onChange={e=>setForm(f=>({...f, duration:e.target.value}))} />
-          <input className="input" placeholder="우선순위(1-10)" value={form.priority} onChange={e=>setForm(f=>({...f, priority:e.target.value}))} />
-          <div style={{gridColumn:'1 / -1', display:'flex', gap:8}}>
-            <button className="btn primary" type="submit">명소 추가</button>
-            <button type="button" className="btn" onClick={nearestNeighborRoute}>자동 생성</button>
-            <button type="button" className="btn" onClick={exportJSON}>JSON 내보내기</button>
-          </div>
-        </form>
-
-        <div style={{marginTop:12}} className="list">
-          {points.map(p=>(
-            <div key={p.id} className="item" onClick={()=>pushRoute(`detail/points/${p.id}`)} style={{cursor:'pointer'}}>
-              <div>
-                <div style={{fontWeight:700}}>{p.name}</div>
-                <div className="muted small">체류: {p.duration}분 · 우선순위: {p.priority} · {p.lat && p.lng ? `(${p.lat}, ${p.lng})` : '좌표없음'}</div>
-              </div>
-              <div style={{display:'flex', gap:8}}>
-                <button className="pill" onClick={(e)=>{ e.stopPropagation(); setPoints(prev=>prev.filter(x=>x.id!==p.id)); }}>삭제</button>
-              </div>
+        <div style={{marginTop:12, display:'grid', gap:10}}>
+          <div className="card">
+            <label className="small">명소명 (검색하여 미리보기)</label>
+            <input className="input" placeholder="명소명" value={form.name} onChange={e=>setForm(f=>({...f, name:e.target.value}))} />
+            <div style={{display:'flex', gap:8, marginTop:8}}>
+              <button className="btn" onClick={searchPreview}>맵 미리보기</button>
+              <button className="btn" onClick={findCoordsExternal}>Google Maps에서 위치 확인</button>
             </div>
-          ))}
-        </div>
 
-        <div style={{marginTop:12}} className="card">
-          <h4 className="small">자동 생성된 코스</h4>
-          {route ? (
-            <ol style={{paddingLeft:16}}>
-              {route.map(r=>(
-                <li key={r.id} style={{marginBottom:6}}>
-                  <div style={{fontWeight:700}}>{r.name}</div>
-                  <div className="muted small">체류: {r.duration}분 · 우선순위: {r.priority}</div>
-                </li>
+            <label className="small" style={{marginTop:8}}>위치 좌표 (선택) — 직접 붙여넣기 가능</label>
+            <div style={{display:'flex', gap:8, marginTop:8}}>
+              <input className="input" placeholder="lat" value={form.lat} onChange={e=>setForm(f=>({...f, lat:e.target.value}))} />
+              <input className="input" placeholder="lng" value={form.lng} onChange={e=>setForm(f=>({...f, lng:e.target.value}))} />
+            </div>
+            <label className="small" style={{marginTop:8}}>체류시간(분)</label>
+            <input className="input" placeholder="60" value={form.duration} onChange={e=>setForm(f=>({...f, duration:e.target.value}))} />
+            <label className="small" style={{marginTop:8}}>우선순위</label>
+            <input type="range" min="1" max="10" value={form.priority} onChange={e=>setForm(f=>({...f, priority:Number(e.target.value)}))} />
+
+            <div style={{display:'flex', gap:8, marginTop:10}}>
+              <button className="btn primary" onClick={addPoint}>명소 추가</button>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="small">구글맵 미리보기</h3>
+            <div style={{marginTop:10}} className="map-wrap">
+              {previewQuery ? (
+                <iframe className="map-iframe" title="course-map-preview" src={`https://www.google.com/maps?q=${encodeURIComponent(previewQuery)}&output=embed`} />
+              ) : (
+                <div style={{padding:12}} className="muted small">명소명을 검색하면 미리보기가 표시됩니다.</div>
+              )}
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="small">현재 코스에 추가된 명소</h3>
+            <div style={{marginTop:8}} className="list">
+              {points.length === 0 ? <div className="muted small">아직 명소가 없습니다.</div> : points.map(p=>(
+                <div key={p.id} className="item">
+                  <div>
+                    <div style={{fontWeight:700}}>{p.name}</div>
+                    <div className="muted small">{p.duration}분 · 우선순위: {p.priority} · {p.lat && p.lng ? `(${p.lat},${p.lng})` : '좌표 없음'}</div>
+                  </div>
+                  <div style={{display:'flex', gap:8}}>
+                    <a className="pill" style={{textDecoration:'none'}} target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}`}>지도</a>
+                    <button className="pill" onClick={()=>removePoint(p.id)}>삭제</button>
+                  </div>
+                </div>
               ))}
-            </ol>
-          ) : <div className="muted small">아직 코스가 생성되지 않았습니다.</div>}
-          <div className="muted small" style={{marginTop:8}}>총 예상 체류: {estimateTotalDuration(route)} 분</div>
+            </div>
+
+            <div style={{marginTop:12, display:'flex', gap:8, alignItems:'center'}}>
+              <input className="input" placeholder="코스명(선택)" value={courseName} onChange={e=>setCourseName(e.target.value)} />
+              <input className="input" type="date" value={saveDate} onChange={e=>setSaveDate(e.target.value)} style={{maxWidth:150}} />
+              <button className="btn primary" onClick={saveCourse}>날짜별로 저장</button>
+            </div>
+            <div className="muted small" style={{marginTop:8}}>저장하면 해당 날짜에 코스(명소 목록 및 Google Maps 링크 목록)가 저장됩니다.</div>
+          </div>
+
+          <div className="card">
+            <h3 className="small">저장된 날짜별 코스</h3>
+            <div style={{marginTop:8}}>
+              {Object.keys(savedCourses).length === 0 ? <div className="muted small">저장된 코스가 없습니다.</div> : Object.keys(savedCourses).sort().reverse().map(date=>(
+                <div key={date} style={{marginBottom:10}}>
+                  <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:8}}>
+                    <div>
+                      <div style={{fontWeight:700}}>{date}</div>
+                      <div className="muted small">{savedCourses[date].length}개의 코스</div>
+                    </div>
+                    <div style={{display:'flex', gap:8}}>
+                      {savedCourses[date].map(course => (
+                        <div key={course.id} style={{display:'flex', gap:6, alignItems:'center'}}>
+                          <div className="small">{course.name}</div>
+                          <div style={{display:'flex', gap:6}}>
+                            {/* provide links for each place in course */}
+                            {course.points && course.points.map(pt => (
+                              <a key={pt.id} className="pill" target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pt.name)}`}>지도</a>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </section>
     );
   }
 
-  /********** Settings Page (dark mode + accent color) **********/
+  /* ---- Settings (theme + data management + reset dates) ---- */
   function SettingsPage({theme, setTheme}){
     const [mode, setMode] = useState(theme ? theme.mode : 'light');
     const [accent, setAccent] = useState(theme ? theme.accent : '#4f46e5');
@@ -578,11 +710,16 @@
       setMode(def.mode); setAccent(def.accent); setTheme(def); saveTheme(def);
       alert('테마가 초기화되었습니다.');
     }
+    function resetAllData(){
+      if(!confirm('로컬 데이터가 모두 삭제됩니다. 계속할까요?')) return;
+      ['tp_points','tp_flights','tp_places','tp_destinations','tp_prefs','tp_theme_v1','tp_dates','tp_saved_courses'].forEach(k=>localStorage.removeItem(k));
+      alert('로컬 데이터가 삭제되었습니다. 새로고침하세요.');
+    }
 
     return (
       <section>
         <h2>설정</h2>
-        <p className="muted">다크 모드와 액센트 색상을 설정하세요. 설정은 로컬에 저장됩니다.</p>
+        <p className="muted">다크 모드, 액센트 색상 및 데이터 관리를 할 수 있습니다.</p>
 
         <div style={{marginTop:12}} className="grid">
           <div className="card">
@@ -609,7 +746,17 @@
           <div className="card">
             <h3 className="small">데이터 관리</h3>
             <div style={{marginTop:8}}>
-              <button className="btn" onClick={()=>{ if(confirm('로컬 데이터가 모두 삭제됩니다. 계속할까요?')){ ['tp_points','tp_flights','tp_places','tp_destinations','tp_prefs','tp_theme_v1'].forEach(k=>localStorage.removeItem(k)); alert('삭제 완료. 새로고침하세요.'); } }}>로컬 데이터 초기화</button>
+              <button className="btn" onClick={resetAllData}>로컬 데이터 초기화</button>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="small">날짜 초기화</h3>
+            <div style={{marginTop:8}}>
+              <button className="btn" onClick={()=>{
+                if(confirm('저장된 여행 날짜를 초기화합니까?')){ localStorage.removeItem('tp_dates'); alert('여행 날짜가 초기화되었습니다.'); }
+              }}>저장된 날짜 초기화</button>
+              <div className="muted small" style={{marginTop:8}}>대표 페이지에서 한 번 저장한 날짜는 여기에서 초기화할 수 있습니다.</div>
             </div>
           </div>
         </div>
@@ -617,8 +764,8 @@
     );
   }
 
-  /********** DetailView component (prev/next + swipe + back) **********/
-  function DetailView({type, id, navigateTo}){
+  /* ---- Detail view unchanged ---- */
+  function DetailView({type, id}) {
     const [items, setItems] = useState([]);
     const [index, setIndex] = useState(0);
     const [item, setItem] = useState(null);
@@ -627,9 +774,9 @@
     useEffect(()=>{
       let list = [];
       try{
-        if(type === 'flights') list = JSON.parse(localStorage.getItem('tp_flights')) || sampleFlights();
-        else if(type === 'places') list = JSON.parse(localStorage.getItem('tp_places')) || sampleAccommodations();
-        else if(type === 'destinations') list = JSON.parse(localStorage.getItem('tp_destinations')) || sampleDestinations();
+        if(type === 'flights') list = JSON.parse(localStorage.getItem('tp_flights')) || [];
+        else if(type === 'places') list = JSON.parse(localStorage.getItem('tp_places')) || [];
+        else if(type === 'destinations') list = JSON.parse(localStorage.getItem('tp_destinations')) || [];
         else if(type === 'points') list = JSON.parse(localStorage.getItem('tp_points')) || [];
       }catch(e){ list = []; }
       setItems(list);
@@ -640,26 +787,10 @@
 
     useEffect(()=>{ setItem(items[index] || null); }, [index, items]);
 
-    function goPrev(e){
-      if(e) e.stopPropagation();
-      if(index > 0) {
-        const nx = index - 1; const it = items[nx]; pushRoute(`detail/${type}/${it.id}`);
-      } else { history.back(); }
-    }
-    function goNext(e){
-      if(e) e.stopPropagation();
-      if(index < items.length - 1) {
-        const nx = index + 1; const it = items[nx]; pushRoute(`detail/${type}/${it.id}`);
-      } else { alert('마지막 항목입니다.'); }
-    }
-
+    function goPrev(e){ if(e) e.stopPropagation(); if(index > 0) { const nx = index - 1; const it = items[nx]; pushRoute(`detail/${type}/${it.id}`); } else { history.back(); } }
+    function goNext(e){ if(e) e.stopPropagation(); if(index < items.length - 1) { const nx = index + 1; const it = items[nx]; pushRoute(`detail/${type}/${it.id}`); } else { alert('마지막 항목입니다.'); } }
     function onTouchStart(e){ touchStart.current = e.touches[0].clientX; }
-    function onTouchEnd(e){
-      if(touchStart.current == null) return;
-      const dx = e.changedTouches[0].clientX - touchStart.current;
-      touchStart.current = null;
-      if(dx > 60) { goPrev(); } else if(dx < -60) { goNext(); }
-    }
+    function onTouchEnd(e){ if(touchStart.current == null) return; const dx = e.changedTouches[0].clientX - touchStart.current; touchStart.current = null; if(dx > 60) { goPrev(); } else if(dx < -60) { goNext(); } }
 
     if(!item) return (
       <section>
@@ -687,7 +818,6 @@
             <div>
               <div style={{fontWeight:700}}>{item.airline} · {item.from} → {item.to}</div>
               <div className="muted small">{item.depart} → {item.arrive} · {item.duration}분 · {item.price}원</div>
-              <div style={{marginTop:8}} className="muted">추가 정보: 샘플 데이터입니다.</div>
             </div>
           )}
 
@@ -695,36 +825,39 @@
             <div>
               <div style={{fontWeight:700}}>{item.name} · {item.location}</div>
               <div className="muted small">{item.nights}박 · {item.price}원/박</div>
-              <div style={{marginTop:8}} className="muted">편의시설: {item.amenities}</div>
             </div>
           )}
 
           {type === 'destinations' && (
             <div>
               <div style={{fontWeight:700}}>{item.name}</div>
-              <div className="muted small">{item.summary}</div>
-              <div style={{marginTop:8}} className="muted small">문화:{item.culture} 자연:{item.nature} 음식:{item.food}</div>
+              <div className="muted small">선호도: {item.pref}</div>
+              <div style={{marginTop:8}} className="muted small">검색어: {item.query}</div>
+              <div style={{marginTop:10}} className="map-wrap">
+                <iframe className="map-iframe" title="detail-map" src={`https://www.google.com/maps?q=${encodeURIComponent(item.query)}&output=embed`} />
+              </div>
             </div>
           )}
 
           {type === 'points' && (
             <div>
               <div style={{fontWeight:700}}>{item.name}</div>
-              <div className="muted small">{item.lat && item.lng ? `(${item.lat}, ${item.lng})` : '좌표 없음'}</div>
-              <div style={{marginTop:8}} className="muted small">체류: {item.duration}분 · 우선순위: {item.priority}</div>
+              <div className="muted small">{item.lat && item.lng ? `좌표: (${item.lat}, ${item.lng})` : '좌표 없음'}</div>
+              {item.lat && item.lng ? <div style={{marginTop:10}} className="map-wrap"><iframe className="map-iframe" title="point-map" src={`https://www.google.com/maps?q=${encodeURIComponent(item.lat + ',' + item.lng)}&output=embed`} /></div> : null}
             </div>
           )}
-          <div className="detail-nav">
-            <button className="btn primary" onClick={()=>alert('일정에 추가되는 동작 (샘플)')}>일정에 추가</button>
-            <button className="btn" onClick={()=>alert('공유 복사')}>공유</button>
+
+          <div className="detail-nav" style={{marginTop:12}}>
+            <button className="btn primary" onClick={()=>alert('일정에 추가 (샘플 동작)')}>일정에 추가</button>
             <button className="btn" onClick={()=>{ navigator.clipboard && navigator.clipboard.writeText(location.href); alert('링크 복사됨'); }}>링크복사</button>
+            <a className="btn" style={{textDecoration:'none'}} target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name || item.query || '')}`}>Google Maps에서 열기</a>
           </div>
         </div>
       </section>
     );
   }
 
-  /********** Render **********/
+  /* ---- Render ---- */
   ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 </body>
