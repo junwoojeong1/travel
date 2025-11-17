@@ -3,179 +3,327 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Travel Planner — Single-file Deploy</title>
-  <!-- React + ReactDOM (UMD) and Babel for in-browser JSX compilation.
-       This makes the project deployable as a single static file (GitHub Pages / Vercel static)
-       without any build step. For production you should replace this with a bundler (Vite/CRA).
-  -->
+  <title>Travel Planner — Modern Single File</title>
+
+  <!-- React + ReactDOM (UMD) and Babel for in-browser JSX compilation -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
-    /* Minimal Apple-like glass UI styling (no Tailwind required) */
-    :root{ --bg:#FAF9F6; --glass: rgba(255,255,255,0.65); --muted:#6b7280; --accent:#4f46e5 }
-    html,body,#root{ height:100%; margin:0; background:linear-gradient(180deg,#fbfdff 0%, #f3f5fa 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', 'Helvetica Neue', Arial; }
-    .container{ max-width:1100px; margin:32px auto; padding:28px; }
-    .card{ background:var(--glass); border-radius:28px; padding:20px; box-shadow: 0 8px 30px rgba(15,23,42,0.08); backdrop-filter: blur(8px) saturate(120%); -webkit-backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,0.6); }
+    :root{
+      --bg:#f7f9fc;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#4f46e5;
+      --glass: rgba(255,255,255,0.7);
+    }
+    html,body,#root{ height:100%; margin:0; background:linear-gradient(180deg,#fbfdff 0%, #f3f5fa 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', 'Helvetica Neue', Arial; color:#0f172a; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 
-    h1{ margin:0; font-size:20px }
-    h2{ margin:0 0 6px 0; font-size:18px }
-    p.lead{ color:var(--muted); margin:6px 0 12px 0; font-size:13px }
+    /* App shell */
+    .app{ min-height:100vh; display:flex; flex-direction:column; }
+    header.app-header{ position:fixed; top:0; left:0; right:0; height:64px; display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.85)); border-bottom:1px solid rgba(15,23,42,0.04); backdrop-filter: blur(8px); z-index:50; }
+    .brand { display:flex; align-items:center; gap:10px; }
+    .logo { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#8b5cf6); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:14px; box-shadow:0 6px 20px rgba(79,70,229,0.12); }
+    .title { font-weight:700; font-size:16px; }
+    .header-actions { display:flex; gap:8px; align-items:center; }
 
-    .row{ display:flex; gap:12px; align-items:center }
-    .nav{ display:flex; gap:8px }
-    .btn{ background:white; padding:8px 14px; border-radius:999px; border:1px solid rgba(0,0,0,0.06); cursor:pointer; box-shadow:0 2px 6px rgba(2,6,23,0.06); }
-    .btn.primary{ background:linear-gradient(180deg,#eef2ff,#eef3ff); border:0; color:var(--accent); font-weight:600 }
-    .input, textarea, select{ width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(0,0,0,0.06); background:rgba(255,255,255,0.9); }
-    textarea{ min-height:110px }
-    .grid{ display:grid; grid-template-columns: repeat(2,1fr); gap:12px }
-    .grid-3{ display:grid; grid-template-columns: repeat(3,1fr); gap:8px }
-    .list > div{ margin-bottom:10px }
-    .item{ display:flex; justify-content:space-between; align-items:center; padding:12px; border-radius:14px; border:1px solid rgba(0,0,0,0.04); background:rgba(255,255,255,0.6) }
-    .muted{ color:var(--muted); font-size:13px }
-    .tiny{ font-size:12px }
-    .pill{ padding:6px 10px; border-radius:999px; background:rgba(0,0,0,0.04); }
+    main.content { padding-top:80px; padding-bottom:84px; width:100%; max-width:1100px; margin:32px auto; box-sizing:border-box; }
+
+    /* Card / area */
+    .card{ background:var(--card); border-radius:18px; padding:18px; box-shadow: 0 8px 30px rgba(15,23,42,0.06); border:1px solid rgba(0,0,0,0.03); }
+
+    h1,h2,h3{ margin:0; }
+    .lead { color:var(--muted); font-size:13px; margin-top:6px; }
+
+    /* Layout */
+    .grid { display:grid; gap:12px; grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { display:grid; gap:10px; grid-template-columns: repeat(3, 1fr); }
+    .controls { display:flex; gap:8px; flex-wrap:wrap; }
+
+    .input, textarea, select{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.9)); }
+    textarea{ min-height:110px; resize:vertical; }
+    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:999px; border:0; background:#fff; box-shadow:0 6px 18px rgba(3,7,18,0.06); cursor:pointer; font-weight:600; }
+    .btn.primary{ background:linear-gradient(180deg,#eef2ff,#eef3ff); color:var(--accent); box-shadow:0 8px 28px rgba(79,70,229,0.12); }
+    .muted{ color:var(--muted); font-size:13px; }
+
+    /* lists */
+    .list > .item{ display:flex; gap:12px; align-items:center; padding:12px; border-radius:12px; border:1px solid rgba(0,0,0,0.04); background:linear-gradient(180deg, rgba(255,255,255,1), rgba(250,250,252,0.95)); justify-content:space-between; }
+    .pill{ padding:8px 10px; border-radius:999px; background:rgba(0,0,0,0.04); cursor:pointer; font-size:13px; }
+
+    /* bottom nav (mobile) */
+    .bottom-nav{ position:fixed; left:12px; right:12px; bottom:12px; height:64px; background:var(--card); border-radius:14px; display:flex; justify-content:space-around; align-items:center; box-shadow:0 14px 36px rgba(2,6,23,0.08); z-index:60; border:1px solid rgba(0,0,0,0.04); }
+    .nav-btn{ display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12px; color:var(--muted); cursor:pointer; width:68px; height:44px; justify-content:center; border-radius:10px; }
+    .nav-btn.active{ color:var(--accent); font-weight:700; }
 
     /* responsive */
-    @media(max-width:800px){ .grid{ grid-template-columns: 1fr } .grid-3{ grid-template-columns: 1fr } }
+    @media(min-width:900px){
+      .grid{ grid-template-columns: repeat(3, 1fr); }
+      .grid-3{ grid-template-columns: repeat(4, 1fr); }
+      main.content{ margin-top:48px; }
+      .bottom-nav{ display:none; }
+      .container{ display:flex; gap:16px; max-width:1200px; margin:48px auto; }
+    }
+    @media(max-width:899px){
+      .grid{ grid-template-columns: 1fr; }
+      .grid-3{ grid-template-columns: 1fr; }
+      main.content{ margin:16px; padding-top:92px; }
+      .card{ padding:14px; border-radius:14px; }
+    }
+
+    /* page transition (slide + fade) */
+    .view-wrap{ position:relative; overflow:visible; }
+    .view { position:relative; transition: transform 320ms cubic-bezier(.2,.9,.25,1), opacity 260ms ease; will-change:transform,opacity; }
+    .view.enter-from-right{ transform: translateX(18px); opacity:0; }
+    .view.enter-from-left{ transform: translateX(-18px); opacity:0; }
+    .view.exiting-to-left{ transform: translateX(-18px); opacity:0; }
+    .view.exiting-to-right{ transform: translateX(18px); opacity:0; }
+
+    /* detail overlay (mobile full-screen-ish) */
+    .detail-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+    .detail-body{ padding:8px 0; }
+    .detail-nav { display:flex; gap:8px; margin-top:10px; }
+
+    /* small helpers */
+    .small{ font-size:13px; color:var(--muted); }
   </style>
 </head>
 <body>
   <div id="root"></div>
 
   <script type="text/babel">
-  // Single-file React Travel Planner (no bundler required)
   const { useState, useEffect, useRef } = React;
 
-  function App(){
-    const [page, setPage] = useState('home');
-
-    return (
-      <div className="container">
-        <div className="row" style={{justifyContent:'space-between', alignItems:'flex-start'}}>
-          <div>
-            <h1>Travel Planner</h1>
-            <p className="lead">Rounded, glassy UI — 쉽게 깃허브에 올릴 수 있는 단일 파일 예제</p>
-          </div>
-          <div className="nav">
-            <button className="btn" onClick={()=>downloadAll()}>데이터 저장</button>
-            <label className="btn" style={{display:'inline-flex', alignItems:'center'}}>
-              데이터 불러오기
-              <input type="file" accept="application/json" style={{display:'none'}} onChange={e=>{ if(e.target.files && e.target.files[0]) importFile(e.target.files[0]); }} />
-            </label>
-          </div>
-        </div>
-
-        <div style={{marginTop:18}} className="card">
-          {page === 'home' && <Home onNavigate={setPage} />}
-          {page === 'flights' && <FlightsPage />}
-          {page === 'accommodation' && <AccommodationPage />}
-          {page === 'destinations' && <DestinationsPage />}
-          {page === 'courses' && <CoursesPage />}
-        </div>
-
-        <p className="muted" style={{textAlign:'center', marginTop:12}}>문의 @l_junwoo_l</p>
-      </div>
-    );
-
-    function downloadAll(){
-      const keys = ['tp_points','tp_flights','tp_places','tp_destinations','tp_prefs'];
-      const data = {}; keys.forEach(k=>{ try{ data[k]=JSON.parse(localStorage.getItem(k)||'null') }catch(e){ data[k]=null } });
-      const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='travel-planner-data.json'; a.click(); URL.revokeObjectURL(url);
-    }
-    function importFile(file){
-      const r = new FileReader(); r.onload = e => { try{ const data = JSON.parse(e.target.result); Object.keys(data||{}).forEach(k=>{ if(data[k]!==null) localStorage.setItem(k, JSON.stringify(data[k])); }); alert('데이터 로컬 저장 완료. 새로고침하세요.'); }catch(err){ alert('불러오기 실패: '+err.message) } };
-      r.readAsText(file);
-    }
+  /********** Router helpers (hash + history) **********/
+  function getInitialRouteFromHash(){
+    const h = location.hash.replace(/^#/, '');
+    if(!h) return 'home';
+    // support detail routes like detail/flights/f1
+    return h;
   }
 
-  function Home({onNavigate}){
+  function pushRoute(route){
+    // route is a string like 'home' or 'flights' or 'detail/flights/f1'
+    history.pushState({route}, '', '#' + route);
+    window.dispatchEvent(new PopStateEvent('popstate', {state:{route}})); // trigger handler
+  }
+
+  /********** App **********/
+  function App(){
+    const [route, setRoute] = useState(getInitialRouteFromHash()); // current route string
+    const [animState, setAnimState] = useState('entered'); // 'entering'|'entered'|'exiting'
+    const [animDir, setAnimDir] = useState('left'); // 'left' means forward
+    const prevRouteRef = useRef(route);
+    const isMounted = useRef(false);
+
+    useEffect(()=>{
+      function onPop(e){
+        const newRoute = (e.state && e.state.route) || getInitialRouteFromHash();
+        const prev = prevRouteRef.current;
+        // determine direction: if user pressed back, treat as 'right' (back)
+        // Very simplified: if length of segments decreases => back
+        const pSeg = prev.split('/');
+        const nSeg = newRoute.split('/');
+        const direction = (nSeg.length < pSeg.length) ? 'right' : 'left';
+        setAnimDir(direction === 'left' ? 'left' : 'right');
+        // animate
+        setAnimState('exiting');
+        setTimeout(()=>{ prevRouteRef.current = newRoute; setRoute(newRoute); setAnimState('entering'); setTimeout(()=>setAnimState('entered'), 40); }, 200);
+      }
+      window.addEventListener('popstate', onPop);
+      // ensure consistent initial state pushed so back/forward behave
+      if(!history.state || !history.state.route){ history.replaceState({route}, '', '#' + route); }
+      isMounted.current = true;
+      return ()=> window.removeEventListener('popstate', onPop);
+    }, []);
+
+    function navigateTo(newRoute){
+      const prev = route;
+      setAnimDir('left'); // user triggered forward navigation
+      setAnimState('exiting');
+      // push history so back works
+      setTimeout(()=>{
+        pushRoute(newRoute);
+        // onPop handler will set actual route state after animation (we triggered popstate)
+      }, 180);
+    }
+
+    // small helper to parse route string
+    function routeName(){ return route.split('/')[0] || 'home'; }
+
+    return (
+      <div className="app">
+        <Header route={route} onNavigate={navigateTo} />
+
+        <main className="content">
+          <div className="view-wrap card" style={{overflow:'hidden'}}>
+            {/* Render content — animation controlled by animState & animDir */}
+            <div className={
+              'view ' +
+              (animState === 'entering' ? (animDir==='left' ? 'enter-from-right' : 'enter-from-left')
+                : animState === 'exiting' ? (animDir==='left' ? 'exiting-to-left' : 'exiting-to-right') : '')
+            }>
+              <Routes route={route} navigateTo={navigateTo} />
+            </div>
+          </div>
+        </main>
+
+        <BottomNav current={routeName()} onNavigate={(r)=>navigateTo(r)} />
+      </div>
+    );
+  }
+
+  /********** Header **********/
+  function Header({route, onNavigate}){
+    const showBack = route && route !== 'home' && !route.startsWith('detail') ? true : (route.startsWith('detail') ? true : false);
+    function goBack(){ history.back(); }
+    return (
+      <header className="app-header" role="banner">
+        <div className="brand">
+          <div className="logo">TP</div>
+          <div>
+            <div className="title">Travel Planner</div>
+            <div className="muted small">모바일 최적화 + 부드러운 전환</div>
+          </div>
+        </div>
+
+        <div className="header-actions" role="navigation" aria-label="primary">
+          {showBack ? <button className="btn" onClick={goBack} aria-label="뒤로가기">◀︎ 뒤로</button> : null}
+          <button className="btn" onClick={()=>onNavigate('home')}>홈</button>
+          <button className="btn" onClick={()=>onNavigate('settings')}>설정</button>
+        </div>
+      </header>
+    );
+  }
+
+  /********** Bottom nav **********/
+  function BottomNav({current, onNavigate}){
+    return (
+      <nav className="bottom-nav" role="navigation" aria-label="bottom">
+        <div className={'nav-btn ' + (current==='home' ? 'active':'' )} onClick={()=>onNavigate('home')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 8h-3v8h-12v-8h-3l9-8z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div>트립</div>
+        </div>
+        <div className={'nav-btn ' + (current==='flights' ? 'active':'' )} onClick={()=>onNavigate('flights')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 12h20" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><path d="M6 8l2 4 4 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div>항공</div>
+        </div>
+        <div className={'nav-btn ' + (current==='destinations' ? 'active':'' )} onClick={()=>onNavigate('destinations')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l4 7 7 1-5 5 1 7-7-4-7 4 1-7-5-5 7-1z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div>여행지</div>
+        </div>
+      </nav>
+    );
+  }
+
+  /********** Routes renderer **********/
+  function Routes({route, navigateTo}){
+    const [mainRoute, ...rest] = route.split('/');
+    const routeParams = rest;
+
+    if(mainRoute === 'home' || mainRoute === '') return <Home navigateTo={navigateTo} />;
+    if(mainRoute === 'flights') return <FlightsPage navigateTo={navigateTo} />;
+    if(mainRoute === 'accommodation') return <AccommodationPage navigateTo={navigateTo} />;
+    if(mainRoute === 'destinations') return <DestinationsPage navigateTo={navigateTo} />;
+    if(mainRoute === 'courses') return <CoursesPage navigateTo={navigateTo} />;
+    if(mainRoute === 'settings') return <SettingsPage navigateTo={navigateTo} />;
+    if(mainRoute === 'detail') return <DetailView type={routeParams[0]} id={routeParams[1]} navigateTo={navigateTo} />;
+    // fallback
+    return <Home navigateTo={navigateTo} />;
+  }
+
+  /********** Home **********/
+  function Home({navigateTo}){
     const [message, setMessage] = useState('여행 계획 페이지입니다.');
     const [dates, setDates] = useState({from:'', to:''});
     return (
       <section>
         <h2>대표 페이지</h2>
-        <p className="muted">여행 기본 정보를 입력하세요. (코드에 기본 메시지 '여행 계획 페이지입니다.'가 들어있습니다)</p>
+        <p className="lead">모던한 모바일 우선 UI — 항공/숙박/여행지/코스에 빠르게 접근하세요.</p>
 
-        <div style={{marginTop:12}} className="grid">
-          <div>
-            <label className="tiny">여행 시작일</label>
+        <div style={{marginTop:16}} className="grid">
+          <div className="card">
+            <label className="small">여행 시작</label>
             <input className="input" type="date" value={dates.from} onChange={e=>setDates(d=>({...d, from:e.target.value}))} />
-            <label className="tiny" style={{marginTop:8}}>여행 종료일</label>
+            <label className="small" style={{marginTop:10}}>여행 종료</label>
             <input className="input" type="date" value={dates.to} onChange={e=>setDates(d=>({...d, to:e.target.value}))} />
           </div>
-          <div>
-            <label className="tiny">메시지</label>
-            <textarea className="input" value={message} onChange={e=>setMessage(e.target.value)} />
-          </div>
-        </div>
 
-        <div style={{marginTop:12, display:'flex', gap:8}}>
-          <button className="btn primary" onClick={()=>onNavigate('flights')}>항공편</button>
-          <button className="btn" onClick={()=>onNavigate('accommodation')}>숙박</button>
-          <button className="btn" onClick={()=>onNavigate('destinations')}>여행지</button>
-          <button className="btn" onClick={()=>onNavigate('courses')}>코스</button>
+          <div className="card">
+            <label className="small">메시지</label>
+            <textarea className="input" value={message} onChange={e=>setMessage(e.target.value)} />
+            <div style={{marginTop:10}} className="controls">
+              <button className="btn primary" onClick={()=>navigateTo('flights')}>항공편</button>
+              <button className="btn" onClick={()=>navigateTo('accommodation')}>숙박</button>
+              <button className="btn" onClick={()=>navigateTo('destinations')}>여행지</button>
+              <button className="btn" onClick={()=>navigateTo('courses')}>코스</button>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 style={{marginBottom:6}}>빠른 액션</h3>
+            <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+              <button className="btn" onClick={()=>{
+                const keys = ['tp_points','tp_flights','tp_places','tp_destinations','tp_prefs'];
+                const data={}; keys.forEach(k=>{ try{ data[k]=JSON.parse(localStorage.getItem(k)) }catch(e){ data[k]=null } });
+                const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob);
+                const a=document.createElement('a'); a.href=url; a.download='travel-planner-data.json'; a.click(); URL.revokeObjectURL(url);
+              }}>데이터 저장</button>
+              <label className="btn" style={{cursor:'pointer'}}>
+                불러오기
+                <input type="file" accept="application/json" style={{display:'none'}} onChange={e=>{
+                  const f = e.target.files && e.target.files[0]; if(!f) return;
+                  const r = new FileReader(); r.onload = ev => { try{ const data = JSON.parse(ev.target.result); Object.keys(data||{}).forEach(k=>{ if(data[k]!==null) localStorage.setItem(k, JSON.stringify(data[k])); }); alert('데이터 저장 완료. 새로고침하세요.'); }catch(err){ alert('불러오기 실패: '+err.message); } }; r.readAsText(f);
+                }} />
+              </label>
+              <button className="btn" onClick={()=>navigateTo('settings')}>설정</button>
+            </div>
+          </div>
         </div>
       </section>
     );
   }
 
-  /* --- FlightsPage (간소화) --- */
-  function FlightsPage(){
+  /********** Flights Page (with detail linking) **********/
+  function FlightsPage({navigateTo}){
     const [offers, setOffers] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_flights')) || sampleFlights(); }catch(e){ return sampleFlights(); } });
     useEffect(()=>{ localStorage.setItem('tp_flights', JSON.stringify(offers)); }, [offers]);
     const [form, setForm] = useState({airline:'', from:'', to:'', depart:'', arrive:'', price:'', duration:''});
-    const [selected, setSelected] = useState(null);
-    const dragIndex = useRef(null);
-
     function addOffer(e){ e.preventDefault(); setOffers(o=>[{...form, id:Date.now().toString()}, ...o]); setForm({airline:'', from:'', to:'', depart:'', arrive:'', price:'', duration:''}); }
-    function onDragStart(e,i){ dragIndex.current = i; }
-    function onDrop(e,i){ e.preventDefault(); const j = dragIndex.current; if(j==null) return; setOffers(prev=>{ const arr=[...prev]; const [it]=arr.splice(j,1); arr.splice(i,0,it); return arr; }); dragIndex.current = null; }
-    function onDragOver(e){ e.preventDefault(); }
     function sortBy(key){ setOffers(o=>[...o].sort((a,b)=>{ if(key==='price') return Number(a.price)-Number(b.price); if(key==='duration') return Number(a.duration)-Number(b.duration); return 0; })); }
-
     return (
       <section>
-        <h2>항공편 계획</h2>
-        <p className="muted">항공권을 추가하고 드래그하여여 순서를 바꿀 수 있습니다.</p>
+        <h2>항공편</h2>
+        <p className="muted">항공권을 추가하고 항목을 눌러 세부 정보로 이동하세요.</p>
 
-        <form onSubmit={addOffer} className="grid-3" style={{marginTop:10}}>
+        <form onSubmit={addOffer} className="grid-3" style={{marginTop:12}}>
           <input className="input" placeholder="항공사" value={form.airline} onChange={e=>setForm(f=>({...f, airline:e.target.value}))} />
           <input className="input" placeholder="출발지" value={form.from} onChange={e=>setForm(f=>({...f, from:e.target.value}))} />
           <input className="input" placeholder="도착지" value={form.to} onChange={e=>setForm(f=>({...f, to:e.target.value}))} />
           <input className="input" placeholder="출발시간" value={form.depart} onChange={e=>setForm(f=>({...f, depart:e.target.value}))} />
           <input className="input" placeholder="도착시간" value={form.arrive} onChange={e=>setForm(f=>({...f, arrive:e.target.value}))} />
-          <input className="input" placeholder="가격 (숫자)" value={form.price} onChange={e=>setForm(f=>({...f, price:e.target.value}))} />
+          <input className="input" placeholder="가격" value={form.price} onChange={e=>setForm(f=>({...f, price:e.target.value}))} />
           <input className="input" placeholder="소요시간(분)" value={form.duration} onChange={e=>setForm(f=>({...f, duration:e.target.value}))} />
           <div style={{gridColumn:'1 / -1', display:'flex', gap:8}}>
-            <button className="btn" type="submit">항공편 추가</button>
+            <button className="btn primary" type="submit">추가</button>
             <button type="button" className="btn" onClick={()=>sortBy('price')}>가격순</button>
             <button type="button" className="btn" onClick={()=>sortBy('duration')}>시간순</button>
           </div>
         </form>
 
-        <div className="list" style={{marginTop:12}}>
-          {offers.map((of,i)=> (
-            <div key={of.id} draggable className="item" onDragStart={e=>onDragStart(e,i)} onDragOver={onDragOver} onDrop={e=>onDrop(e,i)}>
+        <div style={{marginTop:12}} className="list">
+          {offers.map(o=>(
+            <div key={o.id} className="item" onClick={()=>pushRoute(`detail/flights/${o.id}`)} style={{cursor:'pointer'}}>
               <div>
-                <div style={{fontWeight:600}}>{of.airline} — {of.from} → {of.to}</div>
-                <div className="muted tiny">{of.depart} → {of.arrive} · {of.duration}분 · {of.price}원</div>
+                <div style={{fontWeight:700}}>{o.airline} · {o.from}→{o.to}</div>
+                <div className="muted small">{o.depart} → {o.arrive} · {o.duration}분 · {o.price}원</div>
               </div>
               <div style={{display:'flex', gap:8}}>
-                <button className="pill" onClick={()=>setSelected(of.id)}>선택</button>
-                <button className="pill" onClick={()=>setOffers(prev=>prev.filter(x=>x.id!==of.id))}>삭제</button>
+                <button className="pill" onClick={(e)=>{ e.stopPropagation(); alert('선택됨'); }}>선택</button>
+                <button className="pill" onClick={(e)=>{ e.stopPropagation(); setOffers(prev=>prev.filter(x=>x.id!==o.id)); }}>삭제</button>
               </div>
             </div>
           ))}
-        </div>
-
-        <div style={{marginTop:12}}>
-          <h3 className="tiny">선택된 항공권</h3>
-          <div className="card" style={{marginTop:8}}>
-            {selected ? (offers.find(o=>o.id===selected)?.airline + ' · ' + offers.find(o=>o.id===selected)?.price + '원') : <div className="muted tiny">아직 선택된 항공권이 없습니다.</div>}
-          </div>
         </div>
       </section>
     );
@@ -189,45 +337,39 @@
     ];
   }
 
-  /* --- Accommodation (간소화) --- */
-  function AccommodationPage(){
+  /********** Accommodation Page **********/
+  function AccommodationPage({navigateTo}){
     const [places, setPlaces] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_places')) || sampleAccommodations(); }catch(e){ return sampleAccommodations(); } });
     useEffect(()=>{ localStorage.setItem('tp_places', JSON.stringify(places)); }, [places]);
     const [form, setForm] = useState({name:'', location:'', price:'', nights:'', amenities:''});
-    const dragIndex = useRef(null);
-
     function add(e){ e.preventDefault(); setPlaces(p=>[{...form, id:Date.now().toString()}, ...p]); setForm({name:'', location:'', price:'', nights:'', amenities:''}); }
-    function onDragStart(e,i){ dragIndex.current = i; }
-    function onDragOver(e){ e.preventDefault(); }
-    function onDrop(e,i){ e.preventDefault(); const j = dragIndex.current; if(j==null) return; setPlaces(prev=>{ const arr=[...prev]; const [it]=arr.splice(j,1); arr.splice(i,0,it); return arr; }); dragIndex.current = null; }
-
     return (
       <section>
-        <h2>숙박 및 기타 시설 계획</h2>
-        <p className="muted">숙소와 기타 편의시설을 추가하고 순서를 정하세요.</p>
+        <h2>숙박</h2>
+        <p className="muted">숙소를 추가하고 항목을 눌러 상세로 이동하세요.</p>
 
         <form onSubmit={add} className="grid" style={{marginTop:10}}>
           <input className="input" placeholder="숙소명" value={form.name} onChange={e=>setForm(f=>({...f, name:e.target.value}))} />
           <input className="input" placeholder="위치" value={form.location} onChange={e=>setForm(f=>({...f, location:e.target.value}))} />
-          <input className="input" placeholder="가격/박(숫자)" value={form.price} onChange={e=>setForm(f=>({...f, price:e.target.value}))} />
+          <input className="input" placeholder="가격/박" value={form.price} onChange={e=>setForm(f=>({...f, price:e.target.value}))} />
           <input className="input" placeholder="숙박일수" value={form.nights} onChange={e=>setForm(f=>({...f, nights:e.target.value}))} />
-          <input className="input" placeholder="편의시설 (콤마로 구분)" value={form.amenities} onChange={e=>setForm(f=>({...f, amenities:e.target.value}))} />
+          <input className="input" placeholder="편의시설" value={form.amenities} onChange={e=>setForm(f=>({...f, amenities:e.target.value}))} />
           <div style={{display:'flex', gap:8, marginTop:8}}>
-            <button className="btn" type="submit">숙소 추가</button>
-            <button type="button" className="btn" onClick={()=>setPlaces(p=>[...p].sort((a,b)=>Number(a.price)-Number(b.price)))}>가격순 정렬</button>
+            <button className="btn primary" type="submit">추가</button>
+            <button type="button" className="btn" onClick={()=>setPlaces(p=>[...p].sort((a,b)=>Number(a.price)-Number(b.price)))}>가격순</button>
           </div>
         </form>
 
         <div style={{marginTop:12}} className="list">
-          {places.map((p,i)=> (
-            <div key={p.id} draggable className="item" onDragStart={e=>onDragStart(e,i)} onDragOver={onDragOver} onDrop={e=>onDrop(e,i)}>
+          {places.map(p=>(
+            <div key={p.id} className="item" onClick={()=>pushRoute(`detail/places/${p.id}`)} style={{cursor:'pointer'}}>
               <div>
-                <div style={{fontWeight:600}}>{p.name} · {p.location}</div>
-                <div className="muted tiny">{p.nights}박 · {p.price}원/박 · {p.amenities}</div>
+                <div style={{fontWeight:700}}>{p.name} · {p.location}</div>
+                <div className="muted small">{p.nights}박 · {p.price}원/박 · {p.amenities}</div>
               </div>
               <div style={{display:'flex', gap:8}}>
-                <button className="pill" onClick={()=>alert('예약 기능은 연동이 필요합니다')}>예약 연동</button>
-                <button className="pill" onClick={()=>setPlaces(prev=>prev.filter(x=>x.id!==p.id))}>삭제</button>
+                <button className="pill" onClick={(e)=>{ e.stopPropagation(); alert('예약 연동 필요') }}>예약</button>
+                <button className="pill" onClick={(e)=>{ e.stopPropagation(); setPlaces(prev=>prev.filter(x=>x.id!==p.id)); }}>삭제</button>
               </div>
             </div>
           ))}
@@ -235,7 +377,6 @@
       </section>
     );
   }
-
   function sampleAccommodations(){
     return [
       {id:'a1', name:'City Hotel', location:'Downtown', price:'90000', nights:'2', amenities:'WiFi, Breakfast'},
@@ -243,8 +384,8 @@
     ];
   }
 
-  /* --- Destinations --- */
-  function DestinationsPage(){
+  /********** Destinations Page **********/
+  function DestinationsPage({navigateTo}){
     const [destinations, setDestinations] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_destinations')) || sampleDestinations(); }catch(e){ return sampleDestinations(); } });
     const [prefs, setPrefs] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_prefs')) || {culture:5, nature:5, food:5, budget:5, distance:5}; }catch(e){ return {culture:5, nature:5, food:5, budget:5, distance:5}; } });
     useEffect(()=>{ localStorage.setItem('tp_destinations', JSON.stringify(destinations)); }, [destinations]);
@@ -256,54 +397,53 @@
 
     return (
       <section>
-        <h2>여행지 계획</h2>
-        <p className="muted">선호에 따라 여행지 우선순위 계산과 간단 일정 초안 생성</p>
+        <h2>여행지</h2>
+        <p className="muted">선호도에 따른 추천과 샘플 일정을 생성합니다.</p>
 
-        <div style={{marginTop:10}} className="grid">
+        <div style={{marginTop:12}} className="grid">
           <div className="card">
-            <h3 className="tiny">선호도 설정</h3>
-            {['culture','nature','food','budget','distance'].map(k=> (
+            <h3 className="small">선호도</h3>
+            {['culture','nature','food','budget','distance'].map(k=>(
               <div key={k} style={{marginTop:8}}>
-                <label className="tiny" style={{textTransform:'capitalize'}}>{k}</label>
+                <label className="small" style={{textTransform:'capitalize'}}>{k}</label>
                 <input type="range" min={1} max={10} value={prefs[k]} onChange={e=>setPrefs(p=>({...p, [k]:Number(e.target.value)}))} style={{width:'100%'}} />
               </div>
             ))}
-
             <div style={{marginTop:8, display:'flex', gap:8}}>
-              <button className="btn" onClick={generatePlan}>일정 생성</button>
+              <button className="btn primary" onClick={generatePlan}>일정 생성</button>
               <button className="btn" onClick={()=>setDestinations(d=>[...d].sort((a,b)=>a.name.localeCompare(b.name)))}>정렬</button>
             </div>
           </div>
 
           <div className="card">
-            <h3 className="tiny">추천 여행지</h3>
+            <h3 className="small">추천 여행지</h3>
             <div style={{marginTop:8}}>
-              {destinations.map(d=> (
-                <div key={d.id} className="item" style={{marginBottom:8}}>
+              {destinations.map(d=>(
+                <div key={d.id} className="item" onClick={()=>pushRoute(`detail/destinations/${d.id}`)} style={{cursor:'pointer'}}>
                   <div>
-                    <div style={{fontWeight:600}}>{d.name}</div>
-                    <div className="muted tiny">{d.summary}</div>
+                    <div style={{fontWeight:700}}>{d.name}</div>
+                    <div className="muted small">{d.summary}</div>
                   </div>
-                  <div className="tiny muted">문화:{d.culture} 자연:{d.nature} 음식:{d.food} 비용:{d.cost}</div>
+                  <div className="small muted">문:{d.culture} 자:{d.nature} 음:{d.food}</div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
 
-        <div style={{marginTop:12}}>
-          <h3 className="tiny">생성된 샘플 일정</h3>
-          <div className="card" style={{marginTop:8}}>
-            {plan ? (
-              <ol style={{paddingLeft:16}}>
-                {plan.map(p=> (
-                  <li key={p.day} style={{marginBottom:8}}>
-                    <div style={{fontWeight:600}}>Day {p.day} — {p.place}</div>
-                    <div className="muted tiny">{p.activities.join(' · ')}</div>
-                  </li>
-                ))}
-              </ol>
-            ) : <div className="muted tiny">일정을 생성하려면 선호도를 설정하고 '일정 생성'을 누르세요.</div>}
+          <div className="card" style={{gridColumn:'1 / -1'}}>
+            <h3 className="small">생성된 샘플 일정</h3>
+            <div style={{marginTop:8}}>
+              {plan ? (
+                <ol style={{paddingLeft:16}}>
+                  {plan.map(p=>(
+                    <li key={p.day} style={{marginBottom:8}}>
+                      <div style={{fontWeight:700}}>Day {p.day} — {p.place}</div>
+                      <div className="muted small">{p.activities.join(' · ')}</div>
+                    </li>
+                  ))}
+                </ol>
+              ) : <div className="muted small">선호도를 설정하고 '일정 생성'을 눌러보세요.</div>}
+            </div>
           </div>
         </div>
       </section>
@@ -319,20 +459,14 @@
     ];
   }
 
-  /* --- Courses (간소화, 지도 기능은 제거 — API 키 없이 동작) --- */
+  /********** Courses Page **********/
   function CoursesPage(){
     const [points, setPoints] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('tp_points')||'[]'); }catch(e){ return []; } });
-    const [form, setForm] = useState({name:'', lat:'', lng:'', duration:'60', open:'09:00', close:'18:00', priority:5});
+    const [form, setForm] = useState({name:'', lat:'', lng:'', duration:'60', priority:5});
     const [route, setRoute] = useState(null);
-    const dragIndex = useRef(null);
-
     useEffect(()=>{ localStorage.setItem('tp_points', JSON.stringify(points)); }, [points]);
 
-    function addPoint(e){ e.preventDefault(); setPoints(p=>[{...form, id:Date.now().toString()}, ...p]); setForm({name:'', lat:'', lng:'', duration:'60', open:'09:00', close:'18:00', priority:5}); }
-    function onDragStart(e,i){ dragIndex.current = i; }
-    function onDragOver(e){ e.preventDefault(); }
-    function onDrop(e,i){ e.preventDefault(); const j = dragIndex.current; if(j==null) return; setPoints(prev=>{ const arr=[...prev]; const [it]=arr.splice(j,1); arr.splice(i,0,it); return arr; }); dragIndex.current = null; }
-
+    function addPoint(e){ e.preventDefault(); setPoints(p=>[{...form, id:Date.now().toString()}, ...p]); setForm({name:'', lat:'', lng:'', duration:'60', priority:5}); }
     function nearestNeighborRoute(){
       const withCoords = points.filter(p=>p.lat && p.lng);
       if(withCoords.length < 2){ setRoute([...points].sort((a,b)=>Number(b.priority)-Number(a.priority))); return; }
@@ -342,14 +476,13 @@
       while(remaining.length){ let nearestIdx=0; let nearestD=dist(current,remaining[0]); for(let i=1;i<remaining.length;i++){ const d = dist(current, remaining[i]); if(d<nearestD){ nearestD=d; nearestIdx=i; } } current = remaining.splice(nearestIdx,1)[0]; visited.push(current); }
       visited.sort((a,b)=>Number(b.priority)-Number(a.priority)); setRoute(visited);
     }
-
     function estimateTotalDuration(order){ if(!order) return 0; return order.reduce((s,p)=>s + (Number(p.duration)||0),0); }
     function exportJSON(){ const blob = new Blob([JSON.stringify({points,route},null,2)],{type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='course-plan.json'; a.click(); URL.revokeObjectURL(url); }
 
     return (
       <section>
-        <h2>코스 제작</h2>
-        <p className="muted">좌표가 있으면 더 좋아요 — 간단한 자동 코스 생성 알고리즘 포함</p>
+        <h2>코스 만들기</h2>
+        <p className="muted">좌표를 넣으면 자동으로 경로를 만들 수 있습니다.</p>
 
         <form onSubmit={addPoint} style={{marginTop:10}} className="grid">
           <input className="input" placeholder="명소명" value={form.name} onChange={e=>setForm(f=>({...f, name:e.target.value}))} />
@@ -357,48 +490,173 @@
           <input className="input" placeholder="lng (선택)" value={form.lng} onChange={e=>setForm(f=>({...f, lng:e.target.value}))} />
           <input className="input" placeholder="체류시간(분)" value={form.duration} onChange={e=>setForm(f=>({...f, duration:e.target.value}))} />
           <input className="input" placeholder="우선순위(1-10)" value={form.priority} onChange={e=>setForm(f=>({...f, priority:e.target.value}))} />
-          <div style={{display:'flex', gap:8, marginTop:8}}>
-            <button className="btn" type="submit">명소 추가</button>
-            <button type="button" className="btn" onClick={nearestNeighborRoute}>자동 코스 생성</button>
+          <div style={{gridColumn:'1 / -1', display:'flex', gap:8}}>
+            <button className="btn primary" type="submit">명소 추가</button>
+            <button type="button" className="btn" onClick={nearestNeighborRoute}>자동 생성</button>
             <button type="button" className="btn" onClick={exportJSON}>JSON 내보내기</button>
           </div>
         </form>
 
-        <div style={{marginTop:12}}>
-          <h3 className="tiny">명소 목록 (드래그로 순서 변경)</h3>
-          <div className="list" style={{marginTop:8}}>
-            {points.map((p,i)=> (
-              <div key={p.id} draggable className="item" onDragStart={e=>onDragStart(e,i)} onDragOver={onDragOver} onDrop={e=>onDrop(e,i)}>
-                <div>
-                  <div style={{fontWeight:600}}>{p.name}</div>
-                  <div className="muted tiny">체류: {p.duration}분 · 우선순위: {p.priority} · {p.lat && p.lng ? `(${p.lat}, ${p.lng})` : '좌표없음'}</div>
-                </div>
-                <div style={{display:'flex', gap:8}}>
-                  <button className="pill" onClick={()=>setPoints(prev=>prev.filter(x=>x.id!==p.id))}>삭제</button>
-                </div>
+        <div style={{marginTop:12}} className="list">
+          {points.map(p=>(
+            <div key={p.id} className="item" onClick={()=>pushRoute(`detail/points/${p.id}`)} style={{cursor:'pointer'}}>
+              <div>
+                <div style={{fontWeight:700}}>{p.name}</div>
+                <div className="muted small">체류: {p.duration}분 · 우선순위: {p.priority} · {p.lat && p.lng ? `(${p.lat}, ${p.lng})` : '좌표없음'}</div>
               </div>
-            ))}
-          </div>
+              <div style={{display:'flex', gap:8}}>
+                <button className="pill" onClick={(e)=>{ e.stopPropagation(); setPoints(prev=>prev.filter(x=>x.id!==p.id)); }}>삭제</button>
+              </div>
+            </div>
+          ))}
+        </div>
 
-          <div style={{marginTop:10}} className="card">
-            <h4 className="tiny">자동 생성된 코스 / 현재 코스</h4>
-            {route ? (
-              <ol style={{paddingLeft:16}}>
-                {route.map(r=> (
-                  <li key={r.id} style={{marginBottom:6}}>
-                    <div style={{fontWeight:600}}>{r.name}</div>
-                    <div className="muted tiny">예상 체류: {r.duration}분 · 우선순위: {r.priority}</div>
-                  </li>
-                ))}
-              </ol>
-            ) : <div className="muted tiny">코스가 아직 생성되지 않았습니다.</div>}
-            <div className="muted tiny" style={{marginTop:8}}>총 예상 체류 시간: {estimateTotalDuration(route)} 분</div>
+        <div style={{marginTop:12}} className="card">
+          <h4 className="small">자동 생성된 코스</h4>
+          {route ? (
+            <ol style={{paddingLeft:16}}>
+              {route.map(r=>(
+                <li key={r.id} style={{marginBottom:6}}>
+                  <div style={{fontWeight:700}}>{r.name}</div>
+                  <div className="muted small">체류: {r.duration}분 · 우선순위: {r.priority}</div>
+                </li>
+              ))}
+            </ol>
+          ) : <div className="muted small">아직 코스가 생성되지 않았습니다.</div>}
+          <div className="muted small" style={{marginTop:8}}>총 예상 체류: {estimateTotalDuration(route)} 분</div>
+        </div>
+      </section>
+    );
+  }
+
+  /********** Settings Page (simple) **********/
+  function SettingsPage(){
+    return (
+      <section>
+        <h2>설정</h2>
+        <p className="muted">계정, 언어, 표시 등을 설정하세요.</p>
+        <div style={{marginTop:12}} className="grid">
+          <div className="card">계정 연결</div>
+          <div className="card">언어/통화</div>
+          <div className="card">알림 설정</div>
+        </div>
+      </section>
+    );
+  }
+
+  /********** DetailView component (prev/next + swipe + back) **********/
+  function DetailView({type, id, navigateTo}){
+    const [items, setItems] = useState([]);
+    const [index, setIndex] = useState(0);
+    const [item, setItem] = useState(null);
+    const touchStart = useRef(null);
+
+    useEffect(()=>{
+      // load correct list depending on type
+      let list = [];
+      try{
+        if(type === 'flights') list = JSON.parse(localStorage.getItem('tp_flights')) || sampleFlights();
+        else if(type === 'places') list = JSON.parse(localStorage.getItem('tp_places')) || sampleAccommodations();
+        else if(type === 'destinations') list = JSON.parse(localStorage.getItem('tp_destinations')) || sampleDestinations();
+        else if(type === 'points') list = JSON.parse(localStorage.getItem('tp_points')) || [];
+      }catch(e){ list = []; }
+      setItems(list);
+      const idx = list.findIndex(x=>x.id === id);
+      setIndex(idx >= 0 ? idx : 0);
+      setItem(list[idx >= 0 ? idx : 0] || null);
+    }, [type, id]);
+
+    useEffect(()=>{ setItem(items[index] || null); }, [index, items]);
+
+    function goPrev(e){
+      if(e) e.stopPropagation();
+      if(index > 0) {
+        const nx = index - 1; const it = items[nx]; pushRoute(`detail/${type}/${it.id}`);
+      } else { history.back(); }
+    }
+    function goNext(e){
+      if(e) e.stopPropagation();
+      if(index < items.length - 1) {
+        const nx = index + 1; const it = items[nx]; pushRoute(`detail/${type}/${it.id}`);
+      } else { alert('마지막 항목입니다.'); }
+    }
+
+    function onTouchStart(e){ touchStart.current = e.touches[0].clientX; }
+    function onTouchEnd(e){
+      if(touchStart.current == null) return;
+      const dx = e.changedTouches[0].clientX - touchStart.current;
+      touchStart.current = null;
+      if(dx > 60) { goPrev(); } else if(dx < -60) { goNext(); }
+    }
+
+    if(!item) return (
+      <section>
+        <h2>상세</h2>
+        <p className="muted">항목을 찾을 수 없습니다.</p>
+      </section>
+    );
+
+    return (
+      <section onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <div className="detail-header">
+          <button className="btn" onClick={()=>history.back()}>◀︎ 뒤로</button>
+          <div>
+            <div style={{fontWeight:800, fontSize:18}}>{item.name || item.airline || item.title || item.name}</div>
+            <div className="muted small">{type} · 항목 {index+1}/{items.length}</div>
+          </div>
+          <div style={{marginLeft:'auto', display:'flex', gap:8}}>
+            <button className="btn" onClick={goPrev}>이전</button>
+            <button className="btn" onClick={goNext}>다음</button>
+          </div>
+        </div>
+
+        <div className="detail-body card">
+          {/* show fields depending on type */}
+          {type === 'flights' && (
+            <div>
+              <div style={{fontWeight:700}}>{item.airline} · {item.from} → {item.to}</div>
+              <div className="muted small">{item.depart} → {item.arrive} · {item.duration}분 · {item.price}원</div>
+              <div style={{marginTop:8}} className="muted">추가 정보: 샘플 데이터입니다.</div>
+            </div>
+          )}
+
+          {type === 'places' && (
+            <div>
+              <div style={{fontWeight:700}}>{item.name} · {item.location}</div>
+              <div className="muted small">{item.nights}박 · {item.price}원/박</div>
+              <div style={{marginTop:8}} className="muted">편의시설: {item.amenities}</div>
+            </div>
+          )}
+
+          {type === 'destinations' && (
+            <div>
+              <div style={{fontWeight:700}}>{item.name}</div>
+              <div className="muted small">{item.summary}</div>
+              <div style={{marginTop:8}} className="muted small">문화:{item.culture} 자연:{item.nature} 음식:{item.food}</div>
+            </div>
+          )}
+
+          {type === 'points' && (
+            <div>
+              <div style={{fontWeight:700}}>{item.name}</div>
+              <div className="muted small">{item.lat && item.lng ? `(${item.lat}, ${item.lng})` : '좌표 없음'}</div>
+              <div style={{marginTop:8}} className="muted small">체류: {item.duration}분 · 우선순위: {item.priority}</div>
+            </div>
+          )}
+          <div className="detail-nav">
+            <button className="btn primary" onClick={()=>alert('일정에 추가되는 동작 (샘플)')}>일정에 추가</button>
+            <button className="btn" onClick={()=>alert('공유 복사')}>공유</button>
+            <button className="btn" onClick={()=>{ navigator.clipboard && navigator.clipboard.writeText(location.href); alert('링크 복사됨'); }}>링크복사</button>
           </div>
         </div>
       </section>
     );
   }
 
+  /********** Utilities **********/
+  function pushRoute(route){ history.pushState({route}, '', '#'+route); window.dispatchEvent(new PopStateEvent('popstate', {state:{route}})); }
+
+  /********** Render **********/
   ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
   </script>
 </body>
