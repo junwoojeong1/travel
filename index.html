@@ -14,7 +14,7 @@
 
   <style>
     /* Minimal Apple-like glass UI styling (no Tailwind required) */
-    :root{ --bg:#f6f7fb; --glass: rgba(255,255,255,0.65); --muted:#6b7280; --accent:#4f46e5 }
+    :root{ --bg:#FAF9F6; --glass: rgba(255,255,255,0.65); --muted:#6b7280; --accent:#4f46e5 }
     html,body,#root{ height:100%; margin:0; background:linear-gradient(180deg,#fbfdff 0%, #f3f5fa 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', 'Helvetica Neue', Arial; }
     .container{ max-width:1100px; margin:32px auto; padding:28px; }
     .card{ background:var(--glass); border-radius:28px; padding:20px; box-shadow: 0 8px 30px rgba(15,23,42,0.08); backdrop-filter: blur(8px) saturate(120%); -webkit-backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,0.6); }
@@ -75,7 +75,7 @@
           {page === 'courses' && <CoursesPage />}
         </div>
 
-        <p className="muted" style={{textAlign:'center', marginTop:12}}>이 파일을 리포지토리 루트에 올리면 GitHub Pages / Vercel 에서 바로 배포됩니다.</p>
+        <p className="muted" style={{textAlign:'center', marginTop:12}}>문의 @l_junwoo_l</p>
       </div>
     );
 
@@ -92,12 +92,12 @@
   }
 
   function Home({onNavigate}){
-    const [message, setMessage] = useState('안녕하세요');
+    const [message, setMessage] = useState('여행 계획 페이지입니다.');
     const [dates, setDates] = useState({from:'', to:''});
     return (
       <section>
         <h2>대표 페이지</h2>
-        <p className="muted">여행 기본 정보를 입력하세요. (코드에 기본 메시지 '안녕하세요'가 들어있습니다)</p>
+        <p className="muted">여행 기본 정보를 입력하세요. (코드에 기본 메시지 '여행 계획 페이지입니다.'가 들어있습니다)</p>
 
         <div style={{marginTop:12}} className="grid">
           <div>
@@ -109,15 +109,14 @@
           <div>
             <label className="tiny">메시지</label>
             <textarea className="input" value={message} onChange={e=>setMessage(e.target.value)} />
-            <p className="muted tiny">기본 메시지는 코드에 '안녕하세요'로 입력되어 있습니다. 원하시면 수정하세요.</p>
           </div>
         </div>
 
         <div style={{marginTop:12, display:'flex', gap:8}}>
-          <button className="btn primary" onClick={()=>onNavigate('flights')}>항공편 계획</button>
-          <button className="btn" onClick={()=>onNavigate('accommodation')}>숙박·기타</button>
-          <button className="btn" onClick={()=>onNavigate('destinations')}>여행지 계획</button>
-          <button className="btn" onClick={()=>onNavigate('courses')}>코스 제작</button>
+          <button className="btn primary" onClick={()=>onNavigate('flights')}>항공편</button>
+          <button className="btn" onClick={()=>onNavigate('accommodation')}>숙박</button>
+          <button className="btn" onClick={()=>onNavigate('destinations')}>여행지</button>
+          <button className="btn" onClick={()=>onNavigate('courses')}>코스</button>
         </div>
       </section>
     );
@@ -140,7 +139,7 @@
     return (
       <section>
         <h2>항공편 계획</h2>
-        <p className="muted">항공권을 추가하고 드래그로 순서를 바꿀 수 있습니다.</p>
+        <p className="muted">항공권을 추가하고 드래그하여여 순서를 바꿀 수 있습니다.</p>
 
         <form onSubmit={addOffer} className="grid-3" style={{marginTop:10}}>
           <input className="input" placeholder="항공사" value={form.airline} onChange={e=>setForm(f=>({...f, airline:e.target.value}))} />
