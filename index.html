@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Travel Planner — Modern Single File</title>
+  <title>Travel Planner — Modern Single File (Dark Mode + Theme)</title>
 
   <!-- React + ReactDOM (UMD) and Babel for in-browser JSX compilation -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -11,27 +11,41 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
+    /* Theme variables (light as default) */
     :root{
-      --bg:#f7f9fc;
-      --card:#ffffff;
-      --muted:#6b7280;
-      --accent:#4f46e5;
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --fg: #0f172a;
+      --accent: #4f46e5; /* default accent */
       --glass: rgba(255,255,255,0.7);
     }
-    html,body,#root{ height:100%; margin:0; background:linear-gradient(180deg,#fbfdff 0%, #f3f5fa 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', 'Helvetica Neue', Arial; color:#0f172a; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    /* Dark theme overrides */
+    .theme-dark {
+      --bg: #0b1020;
+      --card: #0f1724;
+      --muted: #9aa4b2;
+      --fg: #e6eef8;
+      --glass: rgba(255,255,255,0.03);
+    }
+
+    html,body,#root{ height:100%; margin:0; background:linear-gradient(180deg,var(--bg) 0%, rgba(0,0,0,0.03) 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', 'Helvetica Neue', Arial; color:var(--fg); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 
     /* App shell */
     .app{ min-height:100vh; display:flex; flex-direction:column; }
-    header.app-header{ position:fixed; top:0; left:0; right:0; height:64px; display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.85)); border-bottom:1px solid rgba(15,23,42,0.04); backdrop-filter: blur(8px); z-index:50; }
+    header.app-header{ position:fixed; top:0; left:0; right:0; height:64px; display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.55)); border-bottom:1px solid rgba(15,23,42,0.04); backdrop-filter: blur(8px); z-index:50; }
+    .theme-dark header.app-header{ background: linear-gradient(180deg, rgba(8,10,18,0.36), rgba(8,10,18,0.24)); border-bottom-color: rgba(255,255,255,0.03); }
+
     .brand { display:flex; align-items:center; gap:10px; }
-    .logo { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#8b5cf6); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:14px; box-shadow:0 6px 20px rgba(79,70,229,0.12); }
-    .title { font-weight:700; font-size:16px; }
+    .logo { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,var(--accent), #8b5cf6); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:14px; box-shadow:0 6px 20px rgba(79,70,229,0.12); }
+    .title { font-weight:700; font-size:16px; color:var(--fg); }
     .header-actions { display:flex; gap:8px; align-items:center; }
 
     main.content { padding-top:80px; padding-bottom:84px; width:100%; max-width:1100px; margin:32px auto; box-sizing:border-box; }
 
     /* Card / area */
-    .card{ background:var(--card); border-radius:18px; padding:18px; box-shadow: 0 8px 30px rgba(15,23,42,0.06); border:1px solid rgba(0,0,0,0.03); }
+    .card{ background:var(--card); border-radius:18px; padding:18px; box-shadow: 0 8px 30px rgba(2,6,23,0.06); border:1px solid rgba(0,0,0,0.03); }
+    .theme-dark .card{ box-shadow: 0 8px 30px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.03); }
 
     h1,h2,h3{ margin:0; }
     .lead { color:var(--muted); font-size:13px; margin-top:6px; }
@@ -41,14 +55,16 @@
     .grid-3 { display:grid; gap:10px; grid-template-columns: repeat(3, 1fr); }
     .controls { display:flex; gap:8px; flex-wrap:wrap; }
 
-    .input, textarea, select{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.9)); }
+    .input, textarea, select{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.9)); color:var(--fg); }
+    .theme-dark .input{ background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); }
     textarea{ min-height:110px; resize:vertical; }
-    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:999px; border:0; background:#fff; box-shadow:0 6px 18px rgba(3,7,18,0.06); cursor:pointer; font-weight:600; }
-    .btn.primary{ background:linear-gradient(180deg,#eef2ff,#eef3ff); color:var(--accent); box-shadow:0 8px 28px rgba(79,70,229,0.12); }
+    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:999px; border:0; background:transparent; cursor:pointer; font-weight:600; color:var(--fg); box-shadow:none; }
+    .btn.primary{ background: linear-gradient(90deg, rgba(79,70,229,0.12), rgba(79,70,229,0.06)); color:var(--accent); box-shadow: 0 8px 24px rgba(79,70,229,0.08); }
     .muted{ color:var(--muted); font-size:13px; }
 
     /* lists */
     .list > .item{ display:flex; gap:12px; align-items:center; padding:12px; border-radius:12px; border:1px solid rgba(0,0,0,0.04); background:linear-gradient(180deg, rgba(255,255,255,1), rgba(250,250,252,0.95)); justify-content:space-between; }
+    .theme-dark .list > .item{ background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); }
     .pill{ padding:8px 10px; border-radius:999px; background:rgba(0,0,0,0.04); cursor:pointer; font-size:13px; }
 
     /* bottom nav (mobile) */
@@ -60,7 +76,6 @@
     @media(min-width:900px){
       .grid{ grid-template-columns: repeat(3, 1fr); }
       .grid-3{ grid-template-columns: repeat(4, 1fr); }
-      main.content{ margin-top:48px; }
       .bottom-nav{ display:none; }
       .container{ display:flex; gap:16px; max-width:1200px; margin:48px auto; }
     }
@@ -86,6 +101,8 @@
 
     /* small helpers */
     .small{ font-size:13px; color:var(--muted); }
+    .accent-swatch { width:28px; height:28px; border-radius:6px; border:1px solid rgba(0,0,0,0.06); box-shadow: 0 6px 12px rgba(15,23,42,0.06); }
+    .theme-dark .accent-swatch { border:1px solid rgba(255,255,255,0.04); box-shadow: none; }
   </style>
 </head>
 <body>
@@ -98,72 +115,89 @@
   function getInitialRouteFromHash(){
     const h = location.hash.replace(/^#/, '');
     if(!h) return 'home';
-    // support detail routes like detail/flights/f1
     return h;
   }
 
+  // single pushRoute used across the app
   function pushRoute(route){
-    // route is a string like 'home' or 'flights' or 'detail/flights/f1'
     history.pushState({route}, '', '#' + route);
-    window.dispatchEvent(new PopStateEvent('popstate', {state:{route}})); // trigger handler
+    window.dispatchEvent(new PopStateEvent('popstate', {state:{route}}));
   }
+
+  /********** Theme helpers **********/
+  const THEME_KEY = 'tp_theme_v1';
+  function loadTheme(){
+    try{
+      const raw = localStorage.getItem(THEME_KEY);
+      if(!raw) {
+        // respect system preference
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return { mode: prefersDark ? 'dark' : 'light', accent: '#4f46e5' };
+      }
+      return JSON.parse(raw);
+    }catch(e){
+      return { mode: 'light', accent: '#4f46e5' };
+    }
+  }
+  function saveTheme(theme){ try{ localStorage.setItem(THEME_KEY, JSON.stringify(theme)); }catch(e){} }
 
   /********** App **********/
   function App(){
-    const [route, setRoute] = useState(getInitialRouteFromHash()); // current route string
-    const [animState, setAnimState] = useState('entered'); // 'entering'|'entered'|'exiting'
-    const [animDir, setAnimDir] = useState('left'); // 'left' means forward
+    const [route, setRoute] = useState(getInitialRouteFromHash());
+    const [animState, setAnimState] = useState('entered');
+    const [animDir, setAnimDir] = useState('left');
     const prevRouteRef = useRef(route);
     const isMounted = useRef(false);
+
+    // theme state
+    const [theme, setTheme] = useState(loadTheme());
+
+    useEffect(()=>{
+      // apply theme to body class + CSS variable
+      document.body.classList.toggle('theme-dark', theme.mode === 'dark');
+      document.documentElement.style.setProperty('--accent', theme.accent || '#4f46e5');
+      saveTheme(theme);
+    }, [theme]);
 
     useEffect(()=>{
       function onPop(e){
         const newRoute = (e.state && e.state.route) || getInitialRouteFromHash();
         const prev = prevRouteRef.current;
-        // determine direction: if user pressed back, treat as 'right' (back)
-        // Very simplified: if length of segments decreases => back
         const pSeg = prev.split('/');
         const nSeg = newRoute.split('/');
         const direction = (nSeg.length < pSeg.length) ? 'right' : 'left';
         setAnimDir(direction === 'left' ? 'left' : 'right');
-        // animate
         setAnimState('exiting');
         setTimeout(()=>{ prevRouteRef.current = newRoute; setRoute(newRoute); setAnimState('entering'); setTimeout(()=>setAnimState('entered'), 40); }, 200);
       }
       window.addEventListener('popstate', onPop);
-      // ensure consistent initial state pushed so back/forward behave
       if(!history.state || !history.state.route){ history.replaceState({route}, '', '#' + route); }
       isMounted.current = true;
       return ()=> window.removeEventListener('popstate', onPop);
     }, []);
 
     function navigateTo(newRoute){
-      const prev = route;
-      setAnimDir('left'); // user triggered forward navigation
+      setAnimDir('left');
       setAnimState('exiting');
-      // push history so back works
       setTimeout(()=>{
         pushRoute(newRoute);
-        // onPop handler will set actual route state after animation (we triggered popstate)
       }, 180);
     }
 
-    // small helper to parse route string
     function routeName(){ return route.split('/')[0] || 'home'; }
 
     return (
       <div className="app">
-        <Header route={route} onNavigate={navigateTo} />
+        <Header route={route} onNavigate={navigateTo} theme={theme} setTheme={setTheme} />
 
         <main className="content">
           <div className="view-wrap card" style={{overflow:'hidden'}}>
-            {/* Render content — animation controlled by animState & animDir */}
             <div className={
               'view ' +
               (animState === 'entering' ? (animDir==='left' ? 'enter-from-right' : 'enter-from-left')
                 : animState === 'exiting' ? (animDir==='left' ? 'exiting-to-left' : 'exiting-to-right') : '')
             }>
-              <Routes route={route} navigateTo={navigateTo} />
+              <Routes route={route} navigateTo={navigateTo} theme={theme} setTheme={setTheme} />
             </div>
           </div>
         </main>
@@ -174,8 +208,8 @@
   }
 
   /********** Header **********/
-  function Header({route, onNavigate}){
-    const showBack = route && route !== 'home' && !route.startsWith('detail') ? true : (route.startsWith('detail') ? true : false);
+  function Header({route, onNavigate, theme, setTheme}){
+    const showBack = route && route !== 'home';
     function goBack(){ history.back(); }
     return (
       <header className="app-header" role="banner">
@@ -183,7 +217,7 @@
           <div className="logo">TP</div>
           <div>
             <div className="title">Travel Planner</div>
-            <div className="muted small">모바일 최적화 + 부드러운 전환</div>
+            <div className="muted small">모바일 최적화 · 테마 적용</div>
           </div>
         </div>
 
@@ -217,18 +251,15 @@
   }
 
   /********** Routes renderer **********/
-  function Routes({route, navigateTo}){
+  function Routes({route, navigateTo, theme, setTheme}){
     const [mainRoute, ...rest] = route.split('/');
-    const routeParams = rest;
-
     if(mainRoute === 'home' || mainRoute === '') return <Home navigateTo={navigateTo} />;
     if(mainRoute === 'flights') return <FlightsPage navigateTo={navigateTo} />;
     if(mainRoute === 'accommodation') return <AccommodationPage navigateTo={navigateTo} />;
     if(mainRoute === 'destinations') return <DestinationsPage navigateTo={navigateTo} />;
-    if(mainRoute === 'courses') return <CoursesPage navigateTo={navigateTo} />;
-    if(mainRoute === 'settings') return <SettingsPage navigateTo={navigateTo} />;
-    if(mainRoute === 'detail') return <DetailView type={routeParams[0]} id={routeParams[1]} navigateTo={navigateTo} />;
-    // fallback
+    if(mainRoute === 'courses') return <CoursesPage />;
+    if(mainRoute === 'settings') return <SettingsPage theme={theme} setTheme={setTheme} />;
+    if(mainRoute === 'detail') return <DetailView type={rest[0]} id={rest[1]} navigateTo={navigateTo} />;
     return <Home navigateTo={navigateTo} />;
   }
 
@@ -529,16 +560,58 @@
     );
   }
 
-  /********** Settings Page (simple) **********/
-  function SettingsPage(){
+  /********** Settings Page (dark mode + accent color) **********/
+  function SettingsPage({theme, setTheme}){
+    const [mode, setMode] = useState(theme ? theme.mode : 'light');
+    const [accent, setAccent] = useState(theme ? theme.accent : '#4f46e5');
+
+    useEffect(()=>{ setMode(theme.mode); setAccent(theme.accent); }, [theme]);
+
+    function apply(){
+      const newTheme = { mode, accent };
+      setTheme(newTheme);
+      saveTheme(newTheme);
+      alert('테마가 적용되었습니다.');
+    }
+    function reset(){
+      const def = { mode: 'light', accent: '#4f46e5' };
+      setMode(def.mode); setAccent(def.accent); setTheme(def); saveTheme(def);
+      alert('테마가 초기화되었습니다.');
+    }
+
     return (
       <section>
         <h2>설정</h2>
-        <p className="muted">계정, 언어, 표시 등을 설정하세요.</p>
+        <p className="muted">다크 모드와 액센트 색상을 설정하세요. 설정은 로컬에 저장됩니다.</p>
+
         <div style={{marginTop:12}} className="grid">
-          <div className="card">계정 연결</div>
-          <div className="card">언어/통화</div>
-          <div className="card">알림 설정</div>
+          <div className="card">
+            <label className="small">모드</label>
+            <div style={{display:'flex', gap:8, marginTop:8}}>
+              <label className="btn" style={{background: mode==='light' ? 'rgba(79,70,229,0.06)' : 'transparent'}} onClick={()=>setMode('light')}>라이트</label>
+              <label className="btn" style={{background: mode==='dark' ? 'rgba(79,70,229,0.08)' : 'transparent'}} onClick={()=>setMode('dark')}>다크</label>
+            </div>
+            <div style={{marginTop:12}}>
+              <label className="small">액센트 색상</label>
+              <div style={{display:'flex', gap:8, alignItems:'center', marginTop:8}}>
+                <input type="color" value={accent} onChange={(e)=>setAccent(e.target.value)} style={{width:48,height:36,border:'none',padding:2,background:'transparent'}} />
+                <div className="accent-swatch" style={{background:accent}} />
+                <div className="muted small" style={{marginLeft:6}}>{accent}</div>
+              </div>
+            </div>
+
+            <div style={{display:'flex', gap:8, marginTop:12}}>
+              <button className="btn primary" onClick={apply}>적용</button>
+              <button className="btn" onClick={reset}>초기화</button>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="small">데이터 관리</h3>
+            <div style={{marginTop:8}}>
+              <button className="btn" onClick={()=>{ if(confirm('로컬 데이터가 모두 삭제됩니다. 계속할까요?')){ ['tp_points','tp_flights','tp_places','tp_destinations','tp_prefs','tp_theme_v1'].forEach(k=>localStorage.removeItem(k)); alert('삭제 완료. 새로고침하세요.'); } }}>로컬 데이터 초기화</button>
+            </div>
+          </div>
         </div>
       </section>
     );
@@ -552,7 +625,6 @@
     const touchStart = useRef(null);
 
     useEffect(()=>{
-      // load correct list depending on type
       let list = [];
       try{
         if(type === 'flights') list = JSON.parse(localStorage.getItem('tp_flights')) || sampleFlights();
@@ -611,7 +683,6 @@
         </div>
 
         <div className="detail-body card">
-          {/* show fields depending on type */}
           {type === 'flights' && (
             <div>
               <div style={{fontWeight:700}}>{item.airline} · {item.from} → {item.to}</div>
@@ -653,11 +724,8 @@
     );
   }
 
-  /********** Utilities **********/
-  function pushRoute(route){ history.pushState({route}, '', '#'+route); window.dispatchEvent(new PopStateEvent('popstate', {state:{route}})); }
-
   /********** Render **********/
-  ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 </body>
 </html>
